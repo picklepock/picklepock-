@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --sport-green: #10b981;
+  --light-blue: #0ea5e9;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased overflow-x-hidden;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Custom styles for Modern Bottom Navigation */
+.bottom-nav-item {
+  @apply flex flex-col items-center justify-center w-full h-full transition-all duration-300 relative;
+}
+
+.bottom-nav-item.active {
+  @apply text-emerald-400 scale-110;
+}
+
+.bottom-nav-item:not(.active) {
+  @apply text-slate-400;
+}
+
+.nav-dot {
+  @apply absolute -bottom-1 w-1 h-1 bg-emerald-400 rounded-full opacity-0 scale-0 transition-all duration-300;
+}
+
+.active .nav-dot {
+  @apply opacity-100 scale-100;
+}
