@@ -197,9 +197,11 @@ const Profil = ({ session }) => {
         try {
             if (!session?.user?.id) throw new Error("Session utilisateur introuvable.");
 
+            // Utilisation d'UPSERT pour plus de robustesse (crée si absent, met à jour si présent)
             const { data, error } = await supabase
                 .from('profiles')
-                .update({
+                .upsert({
+                    id: session.user.id,
                     username: editForm.username,
                     level: editForm.level,
                     gender: editForm.gender,
@@ -207,19 +209,18 @@ const Profil = ({ session }) => {
                     bio: editForm.bio,
                     avatar_url: editForm.avatar_url,
                     updated_at: new Date().toISOString()
-                })
-                .eq('id', session.user.id)
+                }, { onConflict: 'id' }) // Indispensable pour l'upsert par ID
                 .select();
 
             if (error) throw error;
             
             if (!data || data.length === 0) {
-                throw new Error("Mise à jour échouée : profil non trouvé ou droits insuffisants dans la base de données.");
+                throw new Error(`Échec critique : aucun profil trouvé ou créé (votre ID: ${session.user.id.slice(0, 8)}...)`);
             }
             
             setProfile(data[0]);
             setIsEditing(false);
-            alert('Profil mis à jour avec succès !');
+            alert('Profil enregistré avec succès !');
         } catch (err) {
             alert(err.message);
         } finally {
