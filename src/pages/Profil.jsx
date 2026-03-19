@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { LogOut, Settings, UserCircle, Edit3, X, Check, Camera, ShieldAlert, HelpCircle } from 'lucide-react';
+import { LogOut, Settings, UserCircle, Edit3, X, Check, Camera, ShieldAlert, HelpCircle, ArrowLeft, Send } from 'lucide-react';
 import Login from './Login';
 
 const Profil = ({ session }) => {
@@ -17,6 +17,14 @@ const Profil = ({ session }) => {
         bio: '',
         avatar_url: ''
     });
+    const [uploading, setUploading] = useState(false);
+    const [adminView, setAdminView] = useState(false); // To toggle admin panel in profile
+    const [reports, setReports] = useState([]);
+    const [supportMessages, setSupportMessages] = useState([]);
+    const [adminSubTab, setAdminSubTab] = useState('reports');
+    const [selectedMessage, setSelectedMessage] = useState(null);
+    const [replies, setReplies] = useState([]);
+    const [replyText, setReplyText] = useState('');
 
     useEffect(() => {
         if (session) {
@@ -39,12 +47,12 @@ const Profil = ({ session }) => {
                 if (error && error.code === 'PGRST116') {
                     const newProfile = {
                         id: user.id,
-                        email: user.email,
+                        email: user.email || null,
+                        username: user.email ? user.email.split('@')[0] : (user.phone || 'Joueur_' + user.id.slice(0, 4)),
                         level: 'Débutant',
                         matches_played: 0,
                         wins: 0,
-                        points: 0,
-                        username: user.email.split('@')[0]
+                        points: 0
                     };
                     const { data: created, error: createError } = await supabase
                         .from('profiles')
@@ -59,12 +67,113 @@ const Profil = ({ session }) => {
                 } else {
                     setProfile(data);
                     setEditForm(data);
+                    if (data.role === 'admin') {
+                        fetchAdminData();
+                    }
                 }
             }
         } catch (err) {
             console.error('Error:', err.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchAdminData = async () => {
+        try {
+            const { data: messagesData } = await supabase
+                .from('support_messages')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            const { data: reportsData } = await supabase
+                .from('reports')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (messagesData) setSupportMessages(messagesData);
+            if (reportsData) setReports(reportsData);
+        } catch (err) {
+            console.error("Erreur admin:", err);
+        }
+    };
+
+    const fetchReplies = async (messageId) => {
+        const { data } = await supabase
+            .from('support_replies')
+            .select('*')
+            .eq('message_id', messageId)
+            .order('created_at', { ascending: true });
+        if (data) setReplies(data);
+    };
+
+    const handleSendReply = async (e) => {
+        e.preventDefault();
+        if (!replyText.trim()) return;
+
+        try {
+            const { error: replyError } = await supabase
+                .from('support_replies')
+                .insert([{ message_id: selectedMessage.id, admin_id: session.user.id, content: replyText }]);
+            if (replyError) throw replyError;
+
+            await supabase
+                .from('support_messages')
+                .update({ status: 'in_progress' })
+                .eq('id', selectedMessage.id);
+
+            setReplyText('');
+            fetchReplies(selectedMessage.id);
+            fetchAdminData();
+        } catch (err) {
+            alert(err.message);
+        }
+    };
+
+    const handleResolveMessage = async (messageId) => {
+        try {
+            await supabase
+                .from('support_messages')
+                .update({ status: 'resolved' })
+                .eq('id', messageId);
+            fetchAdminData();
+            if (selectedMessage?.id === messageId) setSelectedMessage(null);
+        } catch (err) {
+            alert(err.message);
+        }
+    };
+
+    const handleUploadAvatar = async (event) => {
+        try {
+            setUploading(true);
+            if (!event.target.files || event.target.files.length === 0) {
+                throw new Error('Vous devez sélectionner une image.');
+            }
+
+            const file = event.target.files[0];
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random()}.${fileExt}`;
+            const filePath = `${session.user.id}/${fileName}`;
+
+            // Upload de l'image dans le bucket 'avatars'
+            let { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(filePath, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            // Récupérer l'URL publique de l'image
+            const { data: { publicUrl } } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(filePath);
+
+            setEditForm({ ...editForm, avatar_url: publicUrl });
+            alert('Image téléchargée avec succès !');
+
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -109,30 +218,23 @@ const Profil = ({ session }) => {
                 <div className="flex space-x-3">
                     {!isEditing ? (
                         <>
-                            {session.user.id === profile?.id ? (
+                            {profile?.role === 'admin' && (
                                 <button
-                                    onClick={() => setIsEditing(true)}
-                                    className="p-3 bg-white text-emerald-400 rounded-2xl shadow-sm border border-slate-100 active:scale-95 transition-all"
-                                    title="Modifier le profil"
-                                >
-                                    <Edit3 size={18} />
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={async () => {
-                                        if (window.confirm("Voulez-vous signaler ce profil ? L'équipe de modération sera avertie.")) {
-                                            const { error } = await supabase.from('reports').insert([
-                                                { reporter_id: session.user.id, target_id: profile.id, type: 'profile', reason: 'Signalement via bouton profil' }
-                                            ]);
-                                            if (!error) alert('Signalement envoyé. Merci de nous aider à garder PicklePock sûr.');
-                                        }
-                                    }}
-                                    className="p-3 bg-white text-rose-400 rounded-2xl shadow-sm border border-slate-100 hover:bg-rose-50 transition-colors"
-                                    title="Signaler un problème"
+                                    onClick={() => { setAdminView(!adminView); setSelectedMessage(null); }}
+                                    className={`px-4 py-2 rounded-2xl shadow-sm border border-slate-100 transition-all flex items-center space-x-2 ${adminView ? 'bg-rose-500 text-white' : 'bg-white text-rose-400'}`}
+                                    title="Centre d'administration"
                                 >
                                     <ShieldAlert size={18} />
+                                    <span className="text-xs font-bold">Admin</span>
                                 </button>
                             )}
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="p-3 bg-white text-emerald-400 rounded-2xl shadow-sm border border-slate-100 active:scale-95 transition-all"
+                                title="Modifier le profil"
+                            >
+                                <Edit3 size={18} />
+                            </button>
                             <button
                                 onClick={handleLogout}
                                 className="p-3 bg-white text-slate-400 rounded-2xl shadow-sm border border-slate-100 hover:text-red-500 transition-colors"
@@ -154,20 +256,30 @@ const Profil = ({ session }) => {
                 <div className="space-y-6">
                     <div className="flex flex-col items-center mb-6">
                         <div className="relative group">
-                            <div className="w-28 h-28 bg-white rounded-[2.5rem] flex items-center justify-center border-2 border-dashed border-slate-200 overflow-hidden shadow-sm">
+                            <div className="w-28 h-28 bg-white rounded-[2.5rem] flex items-center justify-center border-2 border-dashed border-slate-200 overflow-hidden shadow-sm relative">
                                 {editForm.avatar_url ? (
                                     <img src={editForm.avatar_url} className="w-full h-full object-cover" />
                                 ) : (
                                     <img src={`https://avatar.vercel.sh/${editForm.username || 'user'}`} className="w-full h-full object-cover opacity-50" />
                                 )}
+                                {uploading && (
+                                    <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                                        <div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                )}
                             </div>
-                            <input
-                                type="text"
-                                placeholder="Lien URL de la photo"
-                                className="mt-4 w-full text-xs p-3 bg-white rounded-xl border border-slate-100 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/10 transition-all placeholder:text-slate-400"
-                                value={editForm.avatar_url || ''}
-                                onChange={e => setEditForm({ ...editForm, avatar_url: e.target.value })}
-                            />
+                            <label className="mt-4 flex flex-col items-center cursor-pointer">
+                                <span className="text-xs font-bold text-emerald-500 bg-emerald-50 px-4 py-2 rounded-xl hover:bg-emerald-100 transition-all">
+                                    {uploading ? 'Téléchargement...' : 'Changer la photo'}
+                                </span>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleUploadAvatar}
+                                    disabled={uploading}
+                                    className="hidden"
+                                />
+                            </label>
                         </div>
                     </div>
 
@@ -236,6 +348,106 @@ const Profil = ({ session }) => {
                         <Check size={20} />
                         <span>Enregistrer les modifications</span>
                     </button>
+                </div>
+            ) : adminView && profile?.role === 'admin' ? (
+                /* VUE ADMIN - TRANSFÉRÉ DEPUIS MATCHES */
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom duration-300">
+                    {!selectedMessage ? (
+                        <>
+                            <div className="bg-rose-50 border border-rose-100 p-6 rounded-[2rem] flex items-center space-x-4">
+                                <div className="w-12 h-12 bg-rose-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-rose-500/20">
+                                    <ShieldAlert size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-slate-900">Centre Modération</h3>
+                                    <p className="text-xs text-slate-500">Gérez les signalements et le support.</p>
+                                </div>
+                            </div>
+
+                            <div className="flex space-x-2">
+                                <button
+                                    onClick={() => setAdminSubTab('reports')}
+                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${adminSubTab === 'reports' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400'}`}
+                                >
+                                    Signalements ({reports.length})
+                                </button>
+                                <button
+                                    onClick={() => setAdminSubTab('messages')}
+                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${adminSubTab === 'messages' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400'}`}
+                                >
+                                    Support ({supportMessages.length})
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                {adminSubTab === 'reports' ? (
+                                    reports.length > 0 ? reports.map(r => (
+                                        <div key={r.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col space-y-2">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-[10px] bg-rose-50 text-rose-400 px-2 py-1 rounded-lg font-bold uppercase tracking-wider">{r.type || 'SIGNALEMENT'}</span>
+                                                <span className="text-[10px] text-slate-300">#{r.id.slice(0, 8)}</span>
+                                            </div>
+                                            <p className="text-sm font-bold text-slate-900">Origine: {r.reporter_id?.slice(0, 8)}...</p>
+                                            <p className="text-xs text-slate-500 bg-slate-50 p-3 rounded-xl">{r.reason || r.content || 'Pas de détail'}</p>
+                                        </div>
+                                    )) : <p className="text-center text-slate-400 py-10 italic">Aucun signalement.</p>
+                                ) : (
+                                    supportMessages.length > 0 ? supportMessages.map(m => (
+                                        <div
+                                            key={m.id}
+                                            onClick={() => {
+                                                setSelectedMessage(m);
+                                                fetchReplies(m.id);
+                                            }}
+                                            className={`bg-white p-6 rounded-3xl border shadow-sm space-y-3 cursor-pointer hover:border-emerald-200 transition-all ${m.status === 'resolved' ? 'opacity-60 border-slate-100' : 'border-slate-100'}`}
+                                        >
+                                            <div className="flex justify-between items-center">
+                                                <p className="text-sm font-bold text-slate-900">De: {m.user_id?.slice(0, 8)}...</p>
+                                                <span className={`text-[10px] px-2 py-1 rounded-lg font-bold uppercase ${m.status === 'unread' ? 'bg-sky-50 text-sky-400' : m.status === 'in_progress' ? 'bg-amber-50 text-amber-500' : 'bg-slate-50 text-slate-400'}`}>
+                                                    {m.status === 'unread' ? 'Nouveau' : m.status === 'in_progress' ? 'En cours' : m.status === 'resolved' ? 'Fermé' : 'Lu'}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-slate-600 line-clamp-2">"{m.content}"</p>
+                                        </div>
+                                    )) : <p className="text-center text-slate-400 py-10 italic">Aucun message.</p>
+                                )}
+                            </div>
+                        </>
+                    ) : (
+                        /* CHAT ADMIN IN PROFILE */
+                        <div className="space-y-4">
+                            <button onClick={() => setSelectedMessage(null)} className="flex items-center text-slate-400 font-bold text-xs uppercase tracking-widest"><ArrowLeft size={14} className="mr-1" /> Retour</button>
+                            <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col h-[400px]">
+                                <div className="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                                    <h3 className="font-bold text-sm">Support chat</h3>
+                                    {selectedMessage.status !== 'resolved' && (
+                                        <button onClick={() => handleResolveMessage(selectedMessage.id)} className="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-3 py-1.5 rounded-lg active:scale-95 transition-all">Clôturer</button>
+                                    )}
+                                </div>
+                                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                    <div className="bg-slate-100 p-3 rounded-2xl rounded-tl-none text-xs text-slate-700 max-w-[85%]">
+                                        {selectedMessage.content}
+                                    </div>
+                                    {replies.map(r => (
+                                        <div key={r.id} className="bg-emerald-400 text-white p-3 rounded-2xl rounded-tr-none text-xs ml-auto max-w-[85%]">
+                                            {r.content}
+                                        </div>
+                                    ))}
+                                </div>
+                                {selectedMessage.status !== 'resolved' && (
+                                    <form onSubmit={handleSendReply} className="p-3 border-t flex space-x-2">
+                                        <input
+                                            value={replyText}
+                                            onChange={e => setReplyText(e.target.value)}
+                                            placeholder="Répondre..."
+                                            className="flex-1 bg-slate-50 border-none rounded-xl p-3 text-xs focus:ring-1 focus:ring-emerald-400"
+                                        />
+                                        <button type="submit" className="w-10 h-10 bg-emerald-400 text-white rounded-xl flex items-center justify-center"><Send size={16} /></button>
+                                    </form>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             ) : (
                 /* VUE PROFIL NORMALE */
