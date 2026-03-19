@@ -197,7 +197,7 @@ const Profil = ({ session }) => {
         try {
             if (!session?.user?.id) throw new Error("Session utilisateur introuvable.");
 
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('profiles')
                 .update({
                     username: editForm.username,
@@ -208,11 +208,16 @@ const Profil = ({ session }) => {
                     avatar_url: editForm.avatar_url,
                     updated_at: new Date().toISOString()
                 })
-                .eq('id', session.user.id);
+                .eq('id', session.user.id)
+                .select();
 
             if (error) throw error;
             
-            setProfile({ ...profile, ...editForm });
+            if (!data || data.length === 0) {
+                throw new Error("Mise à jour échouée : profil non trouvé ou droits insuffisants dans la base de données.");
+            }
+            
+            setProfile(data[0]);
             setIsEditing(false);
             alert('Profil mis à jour avec succès !');
         } catch (err) {
