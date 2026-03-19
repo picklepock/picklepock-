@@ -151,24 +151,39 @@ const Profil = ({ session }) => {
             }
 
             const file = event.target.files[0];
+            
+            // LIMITE DE TAILLE (3 MO)
+            if (file.size > 3 * 1024 * 1024) {
+                throw new Error('L\'image est trop lourde. Elle doit faire moins de 3 Mo.');
+            }
+
+            // SUPPRESSION DE L'ANCIENNE IMAGE (Optionnel mais recommandé pour nettoyer Storage)
+            if (editForm.avatar_url && editForm.avatar_url.includes('avatars/')) {
+                // On extrait le chemin relatif (tout ce qu'il y a après 'avatars/')
+                const oldPath = editForm.avatar_url.split('avatars/').pop();
+                if (oldPath) {
+                   await supabase.storage.from('avatars').remove([oldPath]);
+                }
+            }
+
             const fileExt = file.name.split('.').pop();
             const fileName = `${Math.random()}.${fileExt}`;
             const filePath = `${session.user.id}/${fileName}`;
 
-            // Upload de l'image dans le bucket 'avatars'
+            // Upload de l'image
             let { error: uploadError } = await supabase.storage
                 .from('avatars')
                 .upload(filePath, file, { upsert: true });
 
             if (uploadError) throw uploadError;
 
-            // Récupérer l'URL publique de l'image
+            // Récupérer l'URL publique
             const { data: { publicUrl } } = supabase.storage
                 .from('avatars')
                 .getPublicUrl(filePath);
 
             setEditForm({ ...editForm, avatar_url: publicUrl });
-            alert('Image téléchargée avec succès !');
+            alert('Image changée avec succès !');
 
         } catch (error) {
             alert(error.message);
