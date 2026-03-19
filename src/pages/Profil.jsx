@@ -195,6 +195,8 @@ const Profil = ({ session }) => {
     const handleUpdateProfile = async () => {
         setLoading(true);
         try {
+            if (!session?.user?.id) throw new Error("Session utilisateur introuvable.");
+
             const { error } = await supabase
                 .from('profiles')
                 .update({
@@ -204,13 +206,15 @@ const Profil = ({ session }) => {
                     region: editForm.region,
                     bio: editForm.bio,
                     avatar_url: editForm.avatar_url,
-                    updated_at: new Date()
+                    updated_at: new Date().toISOString()
                 })
                 .eq('id', session.user.id);
 
             if (error) throw error;
+            
             setProfile({ ...profile, ...editForm });
             setIsEditing(false);
+            alert('Profil mis à jour avec succès !');
         } catch (err) {
             alert(err.message);
         } finally {
