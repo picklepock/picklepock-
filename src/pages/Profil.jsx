@@ -131,15 +131,33 @@ const Profil = ({ session }) => {
     };
 
     const handleResolveMessage = async (messageId) => {
+        if (!window.confirm("Voulez-vous vraiment supprimer définitivement ce ticket et tous les messages associés ?")) return;
+
         try {
-            await supabase
+            // 1. Supprimer toutes les réponses associées
+            const { error: repliesError } = await supabase
+                .from('support_replies')
+                .delete()
+                .eq('message_id', messageId);
+            
+            if (repliesError) throw repliesError;
+
+            // 2. Supprimer le message principal
+            const { error: msgError } = await supabase
                 .from('support_messages')
-                .update({ status: 'resolved' })
+                .delete()
                 .eq('id', messageId);
+
+            if (msgError) throw msgError;
+
             fetchAdminData();
-            if (selectedMessage?.id === messageId) setSelectedMessage(null);
+            if (selectedMessage?.id === messageId) {
+                setSelectedMessage(null);
+                setReplies([]);
+            }
+            alert("Ticket et historique supprimés avec succès.");
         } catch (err) {
-            alert(err.message);
+            alert("Erreur lors de la suppression : " + err.message);
         }
     };
 
