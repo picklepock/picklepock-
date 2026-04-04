@@ -64,7 +64,7 @@ function App() {
                         <Route path="/profil" element={<Profil session={session} />} />
                         <Route path="/matches" element={<Matches session={session} />} />
                         <Route path="/ranking" element={<Ranking />} />
-                        <Route path="/clubs" element={<Clubs />} />
+                        <Route path="/clubs" element={<Clubs session={session} />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/update-password" element={<UpdatePassword />} />
                         <Route path="/help" element={<Help session={session} />} />
