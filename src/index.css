@@ -43,3 +43,13 @@ body {
 .badge-sport {
   @apply text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border border-sport-sand bg-white/50 backdrop-blur-sm shadow-sm text-sport-navy transition-all duration-300;
 }
+
+/* Animations Fun & Sport */
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
