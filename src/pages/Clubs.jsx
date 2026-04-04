@@ -8,6 +8,17 @@ import {
     Trophy, Users, Send, CheckCircle, Clock, Compass, AlertCircle
 } from 'lucide-react';
 
+// Composant pour recentrer la carte de maniere securisee
+function MapController({ center }) {
+    const map = useMap();
+    useEffect(() => {
+        if (center && typeof center[0] === 'number' && typeof center[1] === 'number') {
+            map.flyTo(center, 14, { animate: true, duration: 1.5 });
+        }
+    }, [center, map]);
+    return null;
+}
+
 const Clubs = ({ session }) => {
     const [clubs, setClubs] = useState([]);
     const [selectedClub, setSelectedClub] = useState(null);
@@ -23,7 +34,7 @@ const Clubs = ({ session }) => {
     });
 
     useEffect(() => {
-        // Fix icone Leaflet par defaut a l'interieur du useEffect pour eviter crash SSR/Top-level
+        // Fix icone Leaflet par defaut
         delete L.Icon.Default.prototype._getIconUrl;
         L.Icon.Default.mergeOptions({
             iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -42,8 +53,17 @@ const Clubs = ({ session }) => {
                 .from('clubs')
                 .select('*')
                 .eq('is_active', true);
+            
             if (error) throw error;
-            setClubs(data || []);
+            
+            // FILTRAGE ULTRA-STRICT pour eviter le crash LatLng undefined
+            const validClubs = (data || []).filter(c => 
+                typeof c.latitude === 'number' && 
+                typeof c.longitude === 'number'
+            );
+            
+            console.log("Clubs valides charges:", validClubs.length, validClubs);
+            setClubs(validClubs);
         } catch (err) {
             console.error("Erreur chargement clubs:", err);
         } finally {
@@ -81,7 +101,9 @@ const Clubs = ({ session }) => {
 
     function handleClubClick(club) {
         setSelectedClub(club);
-        setMapCenter([club.latitude, club.longitude]);
+        if (typeof club.latitude === 'number' && typeof club.longitude === 'number') {
+            setMapCenter([club.latitude, club.longitude]);
+        }
     }
 
     // Icone personnalisee
@@ -93,25 +115,19 @@ const Clubs = ({ session }) => {
         popupAnchor: [0, -45],
     });
 
-    const statusConfig = {
-        pending: { label: 'En attente', color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200', icon: <Clock size={12} /> },
-        approved: { label: 'Approuvée', color: 'text-sport-green', bg: 'bg-emerald-50', border: 'border-emerald-200', icon: <CheckCircle size={12} /> },
-        rejected: { label: 'Refusée', color: 'text-rose-500', bg: 'bg-rose-50', border: 'border-rose-200', icon: <X size={12} /> },
-    };
-
     return (
         <div className="flex flex-col min-h-full bg-sport-beige overflow-x-hidden">
             
-            {/* DIAGNOSTIC HEADER - Si tu vois ca, la page charge bien */}
+            {/* diagnostic header */}
             <div className="bg-sport-navy text-white px-6 py-3 shrink-0 flex items-center justify-between shadow-lg">
                 <div className="flex items-center space-x-2">
-                    <Compass size={16} className="text-sport-mint animate-pulse" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">PicklePock Maps x1</span>
+                    <Compass size={16} className="text-sport-mint" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">PicklePock Explorer</span>
                 </div>
                 <div className="text-[10px] font-bold text-sport-blue uppercase">{clubs.length} Clubs</div>
             </div>
 
-            {/* Carte Leaflet - Hauteur pixel FIXE pour debug radical */}
+            {/* Carte Leaflet - Hauteur pixel FIXE */}
             <div className="w-full h-[450px] bg-slate-200 border-b border-sport-sand relative z-10">
                 <MapContainer
                     center={[46.2276, 2.2137]}
@@ -124,6 +140,8 @@ const Clubs = ({ session }) => {
                         attribution='&copy; OpenStreetMap'
                         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
                     />
+
+                    {mapCenter && <MapController center={mapCenter} />}
 
                     {clubs.map(club => (
                         <Marker
@@ -149,7 +167,6 @@ const Clubs = ({ session }) => {
 
             {/* Panneau du bas */}
             <div className="flex-1 bg-sport-beige p-6 space-y-6 pb-40">
-                {/* Actions */}
                 <div className="flex space-x-3">
                     {session ? (
                         <>
@@ -175,7 +192,6 @@ const Clubs = ({ session }) => {
                     )}
                 </div>
 
-                {/* Liste */}
                 <div className="space-y-4">
                     {clubs.map(club => (
                         <div
@@ -183,8 +199,8 @@ const Clubs = ({ session }) => {
                             onClick={() => handleClubClick(club)}
                             className="flex items-center p-4 bg-white border border-sport-sand rounded-[2rem] shadow-sm hover:border-sport-mint/30 transition-all cursor-pointer"
                         >
-                            <div className="w-12 h-12 rounded-xl bg-sport-navy overflow-hidden mr-4">
-                                {club.logo_url ? <img src={club.logo_url} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xl">🎾</div>}
+                            <div className="w-12 h-12 rounded-xl bg-sport-navy flex items-center justify-center text-white mr-4 overflow-hidden">
+                                {club.logo_url ? <img src={club.logo_url} className="w-full h-full object-cover" /> : "🎾"}
                             </div>
                             <div className="flex-1">
                                 <p className="font-black text-sport-navy">{club.name}</p>
@@ -206,37 +222,30 @@ const Clubs = ({ session }) => {
             {selectedClub && (
                 <div className="fixed inset-0 z-[1000] flex items-end justify-center p-4 pb-10" onClick={() => setSelectedClub(null)}>
                     <div className="absolute inset-0 bg-sport-navy/60 backdrop-blur-sm"></div>
-                    <div className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl p-6 animate-in slide-in-from-bottom duration-300" onClick={e => e.stopPropagation()}>
-                        <div className="flex justify-between items-start mb-4">
+                    <div className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl p-8 animate-in slide-in-from-bottom duration-300" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-between items-start mb-6">
                             <h2 className="text-2xl font-black text-sport-navy leading-none">{selectedClub.name}</h2>
                             <button onClick={() => setSelectedClub(null)} className="p-2 bg-sport-beige rounded-full"><X size={18} /></button>
                         </div>
                         <p className="text-sm text-slate-500 mb-6 italic">{selectedClub.description || 'Pas de description.'}</p>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-sport-beige p-4 rounded-2xl">
-                                <p className="text-[9px] font-bold text-slate-400 uppercase">Courts</p>
-                                <p className="text-xl font-black text-sport-navy">{selectedClub.courts_count || '0'}</p>
-                            </div>
-                            <div className="bg-sport-beige p-4 rounded-2xl flex items-center justify-center">
-                                <CheckCircle className="text-sport-mint" />
-                            </div>
+                        <div className="bg-sport-beige p-5 rounded-2xl">
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Localisation</p>
+                            <p className="text-xs font-bold text-sport-navy">{selectedClub.address || '—'}, {selectedClub.city}</p>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Requests Modal omitted for brevity in diag, but keep if needed */}
             {showRequestForm && (
                 <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6">
                     <div className="absolute inset-0 bg-sport-navy/80" onClick={() => setShowRequestForm(false)}></div>
                     <div className="relative bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl" onClick={e => e.stopPropagation()}>
                         <h2 className="text-xl font-black text-sport-navy mb-1 uppercase tracking-tight">Inscription</h2>
                         <p className="text-[10px] text-slate-400 font-bold uppercase mb-6 tracking-widest">Envoi de demande au circuit</p>
-                        
                         <form onSubmit={handleSubmitRequest} className="space-y-4">
                             <input 
                                 placeholder="Nom du Club" 
-                                className="w-full p-4 bg-sport-beige rounded-2xl border-none text-sm font-bold"
+                                className="w-full p-4 bg-sport-beige rounded-2xl border-none text-sm font-bold placeholder:text-slate-300"
                                 value={form.club_name}
                                 onChange={e => setForm({...form, club_name: e.target.value})}
                                 required
@@ -244,12 +253,12 @@ const Clubs = ({ session }) => {
                             <input 
                                 placeholder="Email de contact" 
                                 type="email"
-                                className="w-full p-4 bg-sport-beige rounded-2xl border-none text-sm font-bold"
+                                className="w-full p-4 bg-sport-beige rounded-2xl border-none text-sm font-bold placeholder:text-slate-300"
                                 value={form.contact_email}
                                 onChange={e => setForm({...form, contact_email: e.target.value})}
                                 required
                             />
-                            <button className="w-full py-4 bg-sport-navy text-white rounded-full font-black text-[10px] uppercase tracking-[0.3em]">Envoyer</button>
+                            <button className="w-full py-4 bg-sport-navy text-white rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.3em] shadow-lg">Envoyer la demande</button>
                         </form>
                     </div>
                 </div>
