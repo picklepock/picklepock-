@@ -13,3 +13,9 @@ dist/
 .DS_Store
 *.local
 *.log
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
