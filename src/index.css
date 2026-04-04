@@ -5,14 +5,14 @@
 :root {
   --sport-green: #059669;
   --sport-navy: #0F172A;
-  --sport-beige: #F5F2EE;
+  --sport-sky: #F0F7FF;
   --sport-sand: #E5E1DA;
   --sport-blue: #85C1E9;
   --sport-mint: #10B981;
 }
 
 body {
-  @apply bg-sport-beige text-sport-navy antialiased;
+  @apply bg-sport-sky text-sport-navy antialiased;
   font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-tap-highlight-color: transparent;
   user-select: none;

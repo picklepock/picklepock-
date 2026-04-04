@@ -32,7 +32,7 @@ function App() {
 
     if (loading) {
         return (
-            <div className="h-screen w-screen flex items-center justify-center bg-sport-beige">
+            <div className="h-screen w-screen flex items-center justify-center bg-sport-sky">
                 <div className="w-10 h-10 border-4 border-sport-green border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
@@ -40,10 +40,10 @@ function App() {
 
     return (
         <Router>
-            <div className="flex flex-col h-screen overflow-hidden bg-sport-beige font-['Plus_Jakarta_Sans']">
+            <div className="flex flex-col h-screen overflow-hidden bg-sport-sky font-['Plus_Jakarta_Sans']">
                 
                 {/* Header Fixe Native App */}
-                <header className="fixed top-0 left-0 right-0 h-20 bg-sport-beige/95 backdrop-blur-xl border-b border-sport-sand flex items-center justify-between px-6 z-[60] safe-top">
+                <header className="fixed top-0 left-0 right-0 h-20 bg-sport-sky/95 backdrop-blur-xl border-b border-sport-sand flex items-center justify-between px-6 z-[60] safe-top">
                     <div className="flex items-center space-x-4">
                         <div className="w-10 h-10 bg-white rounded-2xl p-1.5 shadow-sm border border-sport-sand flex items-center justify-center">
                             <img src="/logo.png" alt="PicklePock Logo" className="w-full h-full object-contain" />
@@ -58,7 +58,7 @@ function App() {
                     </button>
                 </header>
 
-                <main className="flex-grow overflow-y-auto mt-20 pb-32 scrollbar-none">
+                <main className="flex-grow overflow-y-auto mt-20 pb-32 scrollbar-none bg-sport-sky">
                     <Routes>
                         <Route path="/" element={<Accueil />} />
                         <Route path="/profil" element={<Profil session={session} />} />
