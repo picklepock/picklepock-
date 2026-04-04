@@ -121,15 +121,15 @@ const Clubs = ({ session }) => {
     };
 
     return (
-        <div className="flex flex-col h-full">
-            {/* Carte Leaflet Interactive - occupe tout l'espace disponible */}
-            <div className="relative flex-1 min-h-[55vh]">
+        <div className="flex flex-col h-full bg-sport-beige">
+            {/* Carte Leaflet Interactive - Hauteur forcee pour eviter la page blanche */}
+            <div className="relative w-full h-[55vh] min-h-[400px] z-10 border-b border-sport-sand">
                 <MapContainer
                     center={[46.2276, 2.2137]}
                     zoom={5}
                     className="w-full h-full"
                     zoomControl={false}
-                    style={{ background: '#F5F2EE' }}
+                    style={{ height: '100%', width: '100%', background: '#F5F2EE' }}
                 >
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
