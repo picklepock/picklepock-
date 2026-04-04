@@ -1,15 +1,40 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
 
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/png" href="/logo.png" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#F5F2EE" />
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap"
     rel="stylesheet">
-  <title>PicklePock - Circuit Compétitif</title>
+  
+  <title>PicklePock - Club House</title>
+  <style>
+    :root {
+      background-color: #F5F2EE;
+    }
+    body {
+      background-color: #F5F2EE;
+      overscroll-behavior-y: none; /* Empeche le "bounce back" du navigateur */
+      -webkit-user-select: none; /* Empeche la selection de texte partout */
+      -webkit-tap-highlight-color: transparent; /* Supprime le feedback gris sur mobile */
+      margin: 0;
+      padding: 0;
+      overflow: hidden; /* Lock scroll here, we'll handle it inside App.jsx */
+    }
+    #root {
+      height: 100vh;
+      height: -webkit-fill-available;
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
 </head>
 
 <body>

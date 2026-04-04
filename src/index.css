@@ -7,36 +7,38 @@
   --sport-navy: #0F172A;
   --sport-beige: #F5F2EE;
   --sport-sand: #E5E1DA;
+  --sport-blue: #85C1E9;
+  --sport-mint: #10B981;
 }
 
 body {
-  @apply bg-sport-beige text-sport-navy antialiased overflow-x-hidden;
+  @apply bg-sport-beige text-sport-navy antialiased;
   font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
-/* Scrollbar Style Prestige */
-::-webkit-scrollbar {
-  width: 6px;
+/* Scrollbar Style - Native Feel */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  @apply bg-sport-sand rounded-full;
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* Navigation Moderne - CLUB HOUSE PRESTIGE */
+/* Header/Safe Area Soports */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Navigation Moderne - NATIVE APP DOCK */
 .bottom-nav-item {
   @apply flex flex-col items-center justify-center w-full transition-all duration-500 relative;
 }
 
-.nav-dot {
-  @apply absolute bottom-0 w-2 h-2 rounded-full opacity-0 scale-0 transition-all duration-500 shadow-[0_0_12px_rgba(5,150,105,0.8)];
-}
-
-.active .nav-dot {
-  @apply opacity-100 scale-100;
+.active .animate-bounce-subtle {
+  animation: bounce-subtle 2.5s ease-in-out infinite;
 }
 
 /* Common Sport Badges */
@@ -47,9 +49,5 @@ body {
 /* Animations Fun & Sport */
 @keyframes bounce-subtle {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
-
-.animate-bounce-subtle {
-  animation: bounce-subtle 2s ease-in-out infinite;
+  50% { transform: translateY(-4px); }
 }
