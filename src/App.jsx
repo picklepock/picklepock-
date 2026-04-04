@@ -32,7 +32,7 @@ function App() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-white">
+            <div className="min-h-screen flex items-center justify-center bg-sport-beige">
                 <div className="w-8 h-8 border-4 border-sport-green border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
@@ -40,7 +40,7 @@ function App() {
 
     return (
         <Router>
-            <div className="flex flex-col min-h-screen bg-white pb-20">
+            <div className="flex flex-col min-h-screen bg-sport-beige pb-20">
                 <main className="flex-grow">
                     <Routes>
                         <Route path="/" element={<Accueil />} />
@@ -55,54 +55,54 @@ function App() {
                     </Routes>
                 </main>
 
-                {/* Bottom Navigation Moderne */}
-                <nav className="fixed bottom-0 left-0 right-0 h-20 bg-white border-t border-slate-100 flex items-center justify-around px-2 z-50">
-                    <NavLink to="/profil" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                {/* Bottom Navigation Moderne - CLUB HOUSE STYLE */}
+                <nav className="fixed bottom-0 left-0 right-0 h-24 bg-white border-t border-sport-sand flex items-center justify-around px-2 z-50 shadow-2xl shadow-sport-navy/10 sm:h-20">
+                    <NavLink to="/profil" className={({ isActive }) => `bottom-nav-item sm:h-full ${isActive ? 'active' : ''}`}>
                         {({ isActive }) => (
                             <>
-                                <User size={22} strokeWidth={isActive ? 2.5 : 2} />
-                                <span className={`text-[10px] font-semibold mt-1 uppercase tracking-wider transition-colors ${isActive ? 'text-emerald-400' : 'text-slate-400'}`}>Profil</span>
-                                <div className="nav-dot"></div>
+                                <User size={24} strokeWidth={isActive ? 3 : 2} className={isActive ? 'text-sport-green transition-all scale-110' : 'text-slate-300'} />
+                                <span className={`text-[9px] font-black mt-2 uppercase tracking-[0.2em] transition-all ${isActive ? 'text-sport-navy' : 'text-slate-300'}`}>Profil</span>
+                                <div className="nav-dot bg-sport-green"></div>
                             </>
                         )}
                     </NavLink>
 
-                    <NavLink to="/" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                    <NavLink to="/" className={({ isActive }) => `bottom-nav-item sm:h-full ${isActive ? 'active' : ''}`}>
                         {({ isActive }) => (
                             <>
-                                <Home size={22} strokeWidth={isActive ? 2.5 : 2} />
-                                <span className={`text-[10px] font-semibold mt-1 uppercase tracking-wider transition-colors ${isActive ? 'text-emerald-400' : 'text-slate-400'}`}>Accueil</span>
-                                <div className="nav-dot"></div>
+                                <Home size={24} strokeWidth={isActive ? 3 : 2} className={isActive ? 'text-sport-green transition-all scale-110' : 'text-slate-300'} />
+                                <span className={`text-[9px] font-black mt-2 uppercase tracking-[0.2em] transition-all ${isActive ? 'text-sport-navy' : 'text-slate-300'}`}>Club</span>
+                                <div className="nav-dot bg-sport-green"></div>
                             </>
                         )}
                     </NavLink>
 
-                    <NavLink to="/matches" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                    <NavLink to="/matches" className={({ isActive }) => `bottom-nav-item sm:h-full ${isActive ? 'active' : ''}`}>
                         {({ isActive }) => (
                             <>
-                                <Trophy size={22} strokeWidth={isActive ? 2.5 : 2} />
-                                <span className={`text-[10px] font-semibold mt-1 uppercase tracking-wider transition-colors ${isActive ? 'text-emerald-400' : 'text-slate-400'}`}>Matchs</span>
-                                <div className="nav-dot"></div>
+                                <Trophy size={24} strokeWidth={isActive ? 3 : 2} className={isActive ? 'text-sport-green transition-all scale-110' : 'text-slate-300'} />
+                                <span className={`text-[9px] font-black mt-2 uppercase tracking-[0.2em] transition-all ${isActive ? 'text-sport-navy' : 'text-slate-300'}`}>Matchs</span>
+                                <div className="nav-dot bg-sport-green"></div>
                             </>
                         )}
                     </NavLink>
 
-                    <NavLink to="/ranking" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                    <NavLink to="/ranking" className={({ isActive }) => `bottom-nav-item sm:h-full ${isActive ? 'active' : ''}`}>
                         {({ isActive }) => (
                             <>
-                                <BarChart3 size={22} strokeWidth={isActive ? 2.5 : 2} />
-                                <span className={`text-[10px] font-semibold mt-1 uppercase tracking-wider transition-colors ${isActive ? 'text-emerald-400' : 'text-slate-400'}`}>Classement</span>
-                                <div className="nav-dot"></div>
+                                <BarChart3 size={24} strokeWidth={isActive ? 3 : 2} className={isActive ? 'text-sport-green transition-all scale-110' : 'text-slate-300'} />
+                                <span className={`text-[9px] font-black mt-2 uppercase tracking-[0.2em] transition-all ${isActive ? 'text-sport-navy' : 'text-slate-300'}`}>Circuit</span>
+                                <div className="nav-dot bg-sport-green"></div>
                             </>
                         )}
                     </NavLink>
 
-                    <NavLink to="/clubs" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                    <NavLink to="/clubs" className={({ isActive }) => `bottom-nav-item sm:h-full ${isActive ? 'active' : ''}`}>
                         {({ isActive }) => (
                             <>
-                                <MapPin size={22} strokeWidth={isActive ? 2.5 : 2} />
-                                <span className={`text-[10px] font-semibold mt-1 uppercase tracking-wider transition-colors ${isActive ? 'text-emerald-400' : 'text-slate-400'}`}>Clubs</span>
-                                <div className="nav-dot"></div>
+                                <MapPin size={24} strokeWidth={isActive ? 3 : 2} className={isActive ? 'text-sport-green transition-all scale-110' : 'text-slate-300'} />
+                                <span className={`text-[9px] font-black mt-2 uppercase tracking-[0.2em] transition-all ${isActive ? 'text-sport-navy' : 'text-slate-300'}`}>Mapping</span>
+                                <div className="nav-dot bg-sport-green"></div>
                             </>
                         )}
                     </NavLink>

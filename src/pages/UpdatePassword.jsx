@@ -77,61 +77,63 @@ const UpdatePassword = () => {
     }
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 font-['Outfit']">
-            <div className="w-full max-w-md bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 text-center">
-                <div className="mb-8">
-                    <img
-                        src="/logo.png"
-                        alt="PicklePock Logo"
-                        className="w-24 h-24 mx-auto mb-4 object-contain"
-                    />
-                    <h2 className="text-2xl font-bold text-slate-900">Nouveau mot de passe</h2>
-                    <p className="text-slate-500 text-sm mt-1">Choisissez un mot de passe sécurisé pour votre compte.</p>
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-sport-beige">
+            <div className="w-full max-w-md bg-white p-12 rounded-[3.5rem] shadow-2xl shadow-sport-navy/10 border border-sport-sand text-center animate-in fade-in zoom-in duration-700">
+                <div className="mb-12">
+                     <div className="w-24 h-24 bg-white rounded-[2.5rem] flex items-center justify-center mx-auto mb-10 shadow-xl border border-sport-sand p-4 group transition-transform hover:rotate-3">
+                        <img
+                            src="/logo.png"
+                            alt="PicklePock Logo"
+                            className="w-full h-full object-contain"
+                        />
+                    </div>
+                    <h2 className="text-3xl font-bold text-sport-navy tracking-tight">Sécurisation</h2>
+                    <p className="text-slate-500 text-sm mt-3 italic font-medium opacity-70 leading-relaxed">Choisissez un code secret de compétition pour votre accès au club.</p>
                 </div>
 
                 {success ? (
-                    <div className="space-y-6 py-8">
-                        <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto animate-bounce">
+                    <div className="space-y-8 py-10 animate-in zoom-in duration-500">
+                        <div className="w-24 h-24 bg-sport-green text-white rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-sport-green/30">
                             <CheckCircle size={48} />
                         </div>
                         <div>
-                            <p className="text-emerald-600 font-bold">Mot de passe mis à jour !</p>
-                            <p className="text-slate-400 text-sm mt-2">Redirection vers la connexion...</p>
+                            <p className="text-sport-green font-black text-xl uppercase tracking-tighter">Code Certifié !</p>
+                            <p className="text-slate-400 text-xs mt-3 italic font-medium">Préparation du court, redirection imminente...</p>
                         </div>
                     </div>
                 ) : (
-                    <form onSubmit={handleUpdatePassword} className="space-y-5 text-left">
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-2 ml-1">Nouveau mot de passe</label>
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                    <form onSubmit={handleUpdatePassword} className="space-y-8 text-left">
+                        <div className="space-y-2">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Nouveau Code</label>
+                            <div className="relative group">
+                                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-sport-green transition-colors" size={20} />
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-12 pr-12 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-400/20 focus:border-emerald-400 transition-all text-slate-900 placeholder:text-slate-400"
+                                    className="w-full pl-14 pr-14 py-5 bg-sport-beige/20 border border-sport-sand rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-sport-green/5 focus:border-sport-green transition-all text-sport-navy font-bold placeholder:text-slate-300 shadow-inner"
                                     placeholder="••••••••"
                                     required
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors"
+                                    className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-sport-navy transition-colors"
                                 >
-                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                 </button>
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-2 ml-1">Confirmer le mot de passe</label>
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                        <div className="space-y-2">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Confirmation</label>
+                            <div className="relative group">
+                                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-sport-green transition-colors" size={20} />
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full pl-12 pr-12 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-400/20 focus:border-emerald-400 transition-all text-slate-900 placeholder:text-slate-400"
+                                    className="w-full pl-14 pr-14 py-5 bg-sport-beige/20 border border-sport-sand rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-sport-green/5 focus:border-sport-green transition-all text-sport-navy font-bold placeholder:text-slate-300 shadow-inner"
                                     placeholder="••••••••"
                                     required
                                 />
@@ -139,8 +141,8 @@ const UpdatePassword = () => {
                         </div>
 
                         {error && (
-                            <div className="p-4 bg-red-50 text-red-500 text-xs rounded-xl border border-red-100 flex items-center">
-                                <ShieldCheck size={16} className="mr-2 shrink-0" />
+                            <div className="p-5 bg-rose-50 text-rose-600 text-[11px] font-bold rounded-[1.5rem] border border-rose-100 flex items-center shadow-sm animate-shake">
+                                <ShieldCheck size={18} className="mr-3 shrink-0" />
                                 <span className="flex-1">{error}</span>
                             </div>
                         )}
@@ -148,19 +150,21 @@ const UpdatePassword = () => {
                         <button
                             type="submit"
                             disabled={loading || !!(error && !password)}
-                            className={`w-full py-4 rounded-2xl font-bold text-sm transition-all shadow-lg ${loading || (error && !password) ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-emerald-400 text-white active:scale-95 shadow-emerald-400/20 hover:bg-emerald-500'
+                            className={`w-full py-6 rounded-[2.5rem] font-bold text-[10px] uppercase tracking-[0.3em] transition-all duration-500 shadow-2xl ${loading || (error && !password) ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-sport-navy text-white hover:bg-sport-green active:scale-95 shadow-sport-navy/20'
                                 }`}
                         >
-                            {loading ? 'Mise à jour...' : 'Mettre à jour le mot de passe'}
+                            {loading ? (
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto"></div>
+                            ) : 'Valider mon nouveau code'}
                         </button>
 
                         {error && !password && (
                             <button
                                 type="button"
                                 onClick={() => navigate('/login')}
-                                className="w-full py-2 text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors"
+                                className="w-full py-2 text-xs font-bold text-slate-400 hover:text-sport-navy transition-colors italic uppercase tracking-widest"
                             >
-                                Retour à la connexion
+                                Retour au hall de connexion
                             </button>
                         )}
                     </form>

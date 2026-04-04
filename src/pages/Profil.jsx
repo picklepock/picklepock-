@@ -252,10 +252,10 @@ const Profil = ({ session }) => {
     if (!session) return <div className="p-4 flex flex-col items-center justify-center min-h-[70vh]"><div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-6"><UserCircle size={48} /></div><h2 className="text-xl font-bold text-gray-900 mb-2">Compte non connecté</h2><Login /></div>;
 
     return (
-        <div className="p-6 max-w-lg mx-auto pb-24 text-slate-900">
+        <div className="p-6 max-w-lg mx-auto pb-24 text-sport-navy">
             {/* HEADER */}
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            <div className="flex justify-between items-center mb-10">
+                <h1 className="text-2xl font-bold tracking-tight text-sport-navy">
                     {isEditing ? 'Éditer le profil' : 'Mon Profil'}
                 </h1>
                 <div className="flex space-x-3">
@@ -264,30 +264,30 @@ const Profil = ({ session }) => {
                             {profile?.role === 'admin' && (
                                 <button
                                     onClick={() => { setAdminView(!adminView); setSelectedMessage(null); }}
-                                    className={`px-4 py-2 rounded-2xl shadow-sm border border-slate-100 transition-all flex items-center space-x-2 ${adminView ? 'bg-rose-500 text-white' : 'bg-white text-rose-400'}`}
+                                    className={`px-4 py-2 rounded-2xl shadow-sm border border-sport-sand transition-all flex items-center space-x-2 ${adminView ? 'bg-rose-600 text-white shadow-xl shadow-rose-600/20' : 'bg-white text-rose-500'}`}
                                     title="Centre d'administration"
                                 >
                                     <ShieldAlert size={18} />
-                                    <span className="text-xs font-bold">Admin</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest">Admin</span>
                                 </button>
                             )}
                             <button
                                 onClick={() => setIsEditing(true)}
-                                className="p-3 bg-white text-emerald-400 rounded-2xl shadow-sm border border-slate-100 active:scale-95 transition-all"
+                                className="p-3 bg-white text-sport-green rounded-2xl shadow-sm border border-sport-sand active:scale-95 transition-all shadow-sport-green/5"
                                 title="Modifier le profil"
                             >
                                 <Edit3 size={18} />
                             </button>
                             <button
                                 onClick={handleLogout}
-                                className="p-3 bg-white text-slate-400 rounded-2xl shadow-sm border border-slate-100 hover:text-red-500 transition-colors"
+                                className="p-3 bg-white text-slate-400 rounded-2xl shadow-sm border border-sport-sand hover:text-rose-500 transition-colors"
                                 title="Se déconnecter"
                             >
                                 <LogOut size={18} />
                             </button>
                         </>
                     ) : (
-                        <button onClick={() => setIsEditing(false)} className="p-3 bg-white text-slate-400 rounded-2xl shadow-sm border border-slate-100 active:scale-95 transition-all">
+                        <button onClick={() => setIsEditing(false)} className="p-3 bg-white text-slate-400 rounded-2xl shadow-sm border border-sport-sand active:scale-95 transition-all">
                             <X size={18} />
                         </button>
                     )}
@@ -296,10 +296,10 @@ const Profil = ({ session }) => {
 
             {isEditing ? (
                 /* FORMULAIRE D'ÉDITION */
-                <div className="space-y-6">
-                    <div className="flex flex-col items-center mb-6">
+                <div className="space-y-8 animate-in fade-in duration-500">
+                    <div className="flex flex-col items-center mb-8">
                         <div className="relative group">
-                            <div className="w-28 h-28 bg-white rounded-[2.5rem] flex items-center justify-center border-2 border-dashed border-slate-200 overflow-hidden shadow-sm relative">
+                            <div className="w-32 h-32 bg-white rounded-[3rem] flex items-center justify-center border-2 border-dashed border-sport-sand overflow-hidden shadow-xl shadow-sport-navy/5 relative">
                                 {editForm.avatar_url ? (
                                     <img src={editForm.avatar_url} className="w-full h-full object-cover" />
                                 ) : (
@@ -307,12 +307,12 @@ const Profil = ({ session }) => {
                                 )}
                                 {uploading && (
                                     <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                                        <div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+                                        <div className="w-5 h-5 border-2 border-sport-green border-t-transparent rounded-full animate-spin"></div>
                                     </div>
                                 )}
                             </div>
                             <label className="mt-4 flex flex-col items-center cursor-pointer">
-                                <span className="text-xs font-bold text-emerald-500 bg-emerald-50 px-4 py-2 rounded-xl hover:bg-emerald-100 transition-all">
+                                <span className="text-[10px] font-bold text-sport-green bg-sport-green/5 px-6 py-2.5 rounded-xl hover:bg-sport-green hover:text-white transition-all uppercase tracking-widest border border-sport-green/10">
                                     {uploading ? 'Téléchargement...' : 'Changer la photo'}
                                 </span>
                                 <input
@@ -326,23 +326,23 @@ const Profil = ({ session }) => {
                         </div>
                     </div>
 
-                    <div className="space-y-5">
-                        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+                    <div className="space-y-6">
+                        <div className="bg-white p-8 rounded-[2.5rem] border border-sport-sand shadow-sm space-y-6">
                             <div>
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Pseudo</label>
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Pseudo de joueur</label>
                                 <input
                                     type="text"
-                                    className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-400/10 focus:border-emerald-400 transition-all"
+                                    className="w-full p-4 bg-sport-beige/20 rounded-2xl border border-sport-sand focus:outline-none focus:ring-4 focus:ring-sport-green/5 focus:border-sport-green transition-all font-bold text-sm"
                                     value={editForm.username || ''}
                                     onChange={e => setEditForm({ ...editForm, username: e.target.value })}
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-6">
                                 <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Niveau</label>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Niveau</label>
                                     <select
-                                        className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 appearance-none focus:outline-none focus:border-emerald-400 transition-all"
+                                        className="w-full p-4 bg-sport-beige/20 rounded-2xl border border-sport-sand appearance-none focus:outline-none focus:border-sport-green transition-all font-bold text-sm"
                                         value={editForm.level}
                                         onChange={e => setEditForm({ ...editForm, level: e.target.value })}
                                     >
@@ -353,21 +353,21 @@ const Profil = ({ session }) => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Genre</label>
-                                    <div className="flex bg-slate-100 p-1 rounded-2xl">
-                                        <button onClick={() => setEditForm({ ...editForm, gender: 'H' })} className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${editForm.gender === 'H' ? 'bg-white text-emerald-400 shadow-sm' : 'text-slate-400'}`}>H</button>
-                                        <button onClick={() => setEditForm({ ...editForm, gender: 'F' })} className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${editForm.gender === 'F' ? 'bg-white text-emerald-400 shadow-sm' : 'text-slate-400'}`}>F</button>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Genre</label>
+                                    <div className="flex bg-sport-beige/30 p-1 rounded-2xl border border-sport-sand">
+                                        <button onClick={() => setEditForm({ ...editForm, gender: 'H' })} className={`flex-1 py-3 rounded-xl text-[10px] font-bold transition-all uppercase tracking-widest ${editForm.gender === 'H' ? 'bg-sport-navy text-white shadow-lg' : 'text-slate-400'}`}>H</button>
+                                        <button onClick={() => setEditForm({ ...editForm, gender: 'F' })} className={`flex-1 py-3 rounded-xl text-[10px] font-bold transition-all uppercase tracking-widest ${editForm.gender === 'F' ? 'bg-sport-navy text-white shadow-lg' : 'text-slate-400'}`}>F</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+                        <div className="bg-white p-8 rounded-[2.5rem] border border-sport-sand shadow-sm space-y-6">
                             <div>
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Région</label>
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Région</label>
                                 <input
                                     type="text"
-                                    className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 focus:outline-none focus:border-emerald-400 transition-all"
+                                    className="w-full p-4 bg-sport-beige/20 rounded-2xl border border-sport-sand focus:outline-none focus:border-sport-green transition-all font-bold text-sm shadow-inner"
                                     value={editForm.region || ''}
                                     onChange={e => setEditForm({ ...editForm, region: e.target.value })}
                                     placeholder="Ex: Île-de-France"
@@ -375,65 +375,65 @@ const Profil = ({ session }) => {
                             </div>
 
                             <div>
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Bio</label>
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Bio / Style de jeu</label>
                                 <textarea
                                     rows="3"
-                                    className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 resize-none focus:outline-none focus:border-emerald-400 transition-all"
+                                    className="w-full p-4 bg-sport-beige/20 rounded-2xl border border-sport-sand resize-none focus:outline-none focus:border-sport-green transition-all font-bold text-sm shadow-inner"
                                     value={editForm.bio || ''}
                                     onChange={e => setEditForm({ ...editForm, bio: e.target.value })}
-                                    placeholder="Votre style de jeu..."
+                                    placeholder="Décrivez votre style de jeu..."
                                 />
                             </div>
                         </div>
                     </div>
 
-                    <button onClick={handleUpdateProfile} className="w-full py-5 bg-emerald-400 text-white rounded-[2rem] font-bold text-sm flex items-center justify-center space-x-2 shadow-xl shadow-emerald-400/20 active:scale-95 transition-all">
+                    <button onClick={handleUpdateProfile} className="w-full py-5 bg-sport-green text-white rounded-[2rem] font-bold text-xs uppercase tracking-[0.2em] flex items-center justify-center space-x-3 shadow-2xl shadow-sport-green/20 active:scale-95 transition-all">
                         <Check size={20} />
-                        <span>Enregistrer les modifications</span>
+                        <span>Enregistrer le profil</span>
                     </button>
                 </div>
             ) : adminView && profile?.role === 'admin' ? (
-                /* VUE ADMIN - TRANSFÉRÉ DEPUIS MATCHES */
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom duration-300">
+                /* VUE ADMIN - STYLE SOBRE */
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom duration-500">
                     {!selectedMessage ? (
                         <>
-                            <div className="bg-rose-50 border border-rose-100 p-6 rounded-[2rem] flex items-center space-x-4">
-                                <div className="w-12 h-12 bg-rose-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-rose-500/20">
-                                    <ShieldAlert size={24} />
+                            <div className="bg-sport-navy border border-white/10 p-8 rounded-[2.5rem] flex items-center space-x-6 shadow-2xl shadow-sport-navy/20">
+                                <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-white shadow-inner ring-1 ring-white/20">
+                                    <ShieldAlert size={28} />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-slate-900">Centre Modération</h3>
-                                    <p className="text-xs text-slate-500">Gérez les signalements et le support.</p>
+                                    <h3 className="font-bold text-white text-lg tracking-tight">Poste de Contrôle</h3>
+                                    <p className="text-xs text-white/50 italic">Modération et assistance circuit.</p>
                                 </div>
                             </div>
 
-                            <div className="flex space-x-2">
+                            <div className="flex bg-sport-sand/30 p-1 rounded-2xl border border-sport-sand">
                                 <button
                                     onClick={() => setAdminSubTab('reports')}
-                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${adminSubTab === 'reports' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400'}`}
+                                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${adminSubTab === 'reports' ? 'bg-sport-navy text-white shadow-lg' : 'text-slate-400'}`}
                                 >
-                                    Signalements ({reports.length})
+                                    Rapports ({reports.length})
                                 </button>
                                 <button
                                     onClick={() => setAdminSubTab('messages')}
-                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${adminSubTab === 'messages' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400'}`}
+                                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${adminSubTab === 'messages' ? 'bg-sport-navy text-white shadow-lg' : 'text-slate-400'}`}
                                 >
-                                    Support ({supportMessages.length})
+                                    Tickets ({supportMessages.length})
                                 </button>
                             </div>
 
                             <div className="space-y-4">
                                 {adminSubTab === 'reports' ? (
                                     reports.length > 0 ? reports.map(r => (
-                                        <div key={r.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col space-y-2">
+                                        <div key={r.id} className="bg-white p-6 rounded-[2rem] border border-sport-sand shadow-sm flex flex-col space-y-3 hover:border-rose-200 transition-all">
                                             <div className="flex justify-between items-center">
-                                                <span className="text-[10px] bg-rose-50 text-rose-400 px-2 py-1 rounded-lg font-bold uppercase tracking-wider">{r.type || 'SIGNALEMENT'}</span>
-                                                <span className="text-[10px] text-slate-300">#{r.id.slice(0, 8)}</span>
+                                                <span className="text-[9px] bg-rose-50 text-rose-500 px-3 py-1 rounded-lg font-black uppercase tracking-widest border border-rose-100">{r.type || 'SIGNALEMENT'}</span>
+                                                <span className="text-[9px] font-bold text-slate-300">ID: {r.id.slice(0, 8)}</span>
                                             </div>
-                                            <p className="text-sm font-bold text-slate-900">Origine: {r.reporter_id?.slice(0, 8)}...</p>
-                                            <p className="text-xs text-slate-500 bg-slate-50 p-3 rounded-xl">{r.reason || r.content || 'Pas de détail'}</p>
+                                            <p className="text-xs font-bold text-sport-navy">Source: <span className="text-slate-400">UID_{r.reporter_id?.slice(0, 6)}</span></p>
+                                            <p className="text-xs text-slate-500 bg-sport-beige/50 p-4 rounded-2xl italic font-medium">"{r.reason || r.content || 'Pas de détail'}"</p>
                                         </div>
-                                    )) : <p className="text-center text-slate-400 py-10 italic">Aucun signalement.</p>
+                                    )) : <p className="text-center text-slate-300 py-12 italic font-medium">Aucun rapport en attente.</p>
                                 ) : (
                                     supportMessages.length > 0 ? supportMessages.map(m => (
                                         <div
@@ -442,50 +442,57 @@ const Profil = ({ session }) => {
                                                 setSelectedMessage(m);
                                                 fetchReplies(m.id);
                                             }}
-                                            className={`bg-white p-6 rounded-3xl border shadow-sm space-y-3 cursor-pointer hover:border-emerald-200 transition-all ${m.status === 'resolved' ? 'opacity-60 border-slate-100' : 'border-slate-100'}`}
+                                            className={`bg-white p-6 rounded-[2rem] border shadow-sm space-y-4 cursor-pointer hover:border-sport-green transition-all group ${m.status === 'resolved' ? 'opacity-50 border-sport-sand grayscale' : 'border-sport-sand'}`}
                                         >
                                             <div className="flex justify-between items-center">
-                                                <p className="text-sm font-bold text-slate-900">De: {m.user_id?.slice(0, 8)}...</p>
-                                                <span className={`text-[10px] px-2 py-1 rounded-lg font-bold uppercase ${m.status === 'unread' ? 'bg-sky-50 text-sky-400' : m.status === 'in_progress' ? 'bg-amber-50 text-amber-500' : 'bg-slate-50 text-slate-400'}`}>
-                                                    {m.status === 'unread' ? 'Nouveau' : m.status === 'in_progress' ? 'En cours' : m.status === 'resolved' ? 'Fermé' : 'Lu'}
+                                                <p className="text-xs font-black text-sport-navy uppercase tracking-tighter">Utilisateur: <span className="text-sport-green italic">UID_{m.user_id?.slice(0, 6)}</span></p>
+                                                <span className={`text-[9px] px-3 py-1.5 rounded-lg font-black uppercase tracking-widest border ${m.status === 'unread' ? 'bg-sport-green text-white border-sport-green shadow-lg shadow-sport-green/20' : m.status === 'in_progress' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+                                                    {m.status === 'unread' ? 'Urgent' : m.status === 'in_progress' ? 'En cours' : 'Fermé'}
                                                 </span>
                                             </div>
-                                            <p className="text-xs text-slate-600 line-clamp-2">"{m.content}"</p>
+                                            <p className="text-xs text-slate-600 line-clamp-2 italic font-medium leading-relaxed">"{m.content}"</p>
                                         </div>
-                                    )) : <p className="text-center text-slate-400 py-10 italic">Aucun message.</p>
+                                    )) : <p className="text-center text-slate-300 py-12 italic font-medium">Boîte de réception vide.</p>
                                 )}
                             </div>
                         </>
                     ) : (
-                        /* CHAT ADMIN IN PROFILE */
-                        <div className="space-y-4">
-                            <button onClick={() => setSelectedMessage(null)} className="flex items-center text-slate-400 font-bold text-xs uppercase tracking-widest"><ArrowLeft size={14} className="mr-1" /> Retour</button>
-                            <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col h-[400px]">
-                                <div className="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-                                    <h3 className="font-bold text-sm">Support chat</h3>
+                        /* CHAT ADMIN PREMIUM */
+                        <div className="space-y-6 animate-in slide-in-from-right duration-500">
+                            <button onClick={() => setSelectedMessage(null)} className="flex items-center text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] hover:text-sport-navy transition-colors">
+                                <ArrowLeft size={16} className="mr-2" /> Retour au poste
+                            </button>
+                            <div className="bg-white rounded-[2.5rem] border border-sport-sand shadow-2xl overflow-hidden flex flex-col h-[500px]">
+                                <div className="p-6 bg-sport-navy text-white flex justify-between items-center">
+                                    <div>
+                                        <h3 className="font-bold text-sm tracking-tight">Ticket Assistance</h3>
+                                        <p className="text-[10px] text-white/50 uppercase tracking-widest mt-0.5">UID_{selectedMessage.user_id?.slice(0, 8)}</p>
+                                    </div>
                                     {selectedMessage.status !== 'resolved' && (
-                                        <button onClick={() => handleResolveMessage(selectedMessage.id)} className="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-3 py-1.5 rounded-lg active:scale-95 transition-all">Clôturer</button>
+                                        <button onClick={() => handleResolveMessage(selectedMessage.id)} className="text-[9px] font-black text-white bg-rose-600 px-4 py-2 rounded-xl active:scale-95 transition-all uppercase tracking-widest shadow-lg shadow-rose-600/30">Clôturer</button>
                                     )}
                                 </div>
-                                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                                    <div className="bg-slate-100 p-3 rounded-2xl rounded-tl-none text-xs text-slate-700 max-w-[85%]">
+                                <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-sport-beige/20 shadow-inner">
+                                    <div className="bg-white p-4 rounded-3xl rounded-tl-none text-xs text-sport-navy max-w-[85%] shadow-sm border border-sport-sand font-medium leading-relaxed">
+                                        <p className="text-[9px] font-bold text-slate-300 uppercase mb-2">Message Utilisateur</p>
                                         {selectedMessage.content}
                                     </div>
                                     {replies.map(r => (
-                                        <div key={r.id} className="bg-emerald-400 text-white p-3 rounded-2xl rounded-tr-none text-xs ml-auto max-w-[85%]">
+                                        <div key={r.id} className="bg-sport-navy text-white p-4 rounded-3xl rounded-tr-none text-xs ml-auto max-w-[85%] shadow-xl shadow-sport-navy/10 font-medium leading-relaxed">
+                                            <p className="text-[9px] font-bold text-white/40 uppercase mb-2">Ma réponse (Admin)</p>
                                             {r.content}
                                         </div>
                                     ))}
                                 </div>
                                 {selectedMessage.status !== 'resolved' && (
-                                    <form onSubmit={handleSendReply} className="p-3 border-t flex space-x-2">
+                                    <form onSubmit={handleSendReply} className="p-4 bg-white border-t border-sport-sand flex space-x-3">
                                         <input
                                             value={replyText}
                                             onChange={e => setReplyText(e.target.value)}
-                                            placeholder="Répondre..."
-                                            className="flex-1 bg-slate-50 border-none rounded-xl p-3 text-xs focus:ring-1 focus:ring-emerald-400"
+                                            placeholder="Tapez votre réponse officielle..."
+                                            className="flex-1 bg-sport-beige/30 border-none rounded-2xl p-4 text-xs focus:ring-2 focus:ring-sport-green/20 placeholder:text-slate-400 font-bold"
                                         />
-                                        <button type="submit" className="w-10 h-10 bg-emerald-400 text-white rounded-xl flex items-center justify-center"><Send size={16} /></button>
+                                        <button type="submit" className="w-14 h-14 bg-sport-green text-white rounded-2xl flex items-center justify-center shadow-lg shadow-sport-green/20 hover:scale-105 active:scale-95 transition-all"><Send size={20} /></button>
                                     </form>
                                 )}
                             </div>
@@ -495,81 +502,89 @@ const Profil = ({ session }) => {
             ) : (
                 /* VUE PROFIL NORMALE */
                 <>
-                    <div className="flex flex-col items-center mb-10">
-                        <div className="w-32 h-32 bg-white rounded-[3rem] flex items-center justify-center p-1 border-4 border-white shadow-xl shadow-slate-200/50 overflow-hidden mb-6 transition-transform hover:scale-105">
+                    <div className="flex flex-col items-center mb-12 animate-in fade-in duration-700">
+                        <div className="w-40 h-40 bg-white rounded-[3.5rem] flex items-center justify-center p-1.5 border border-sport-sand shadow-2xl shadow-sport-navy/5 overflow-hidden mb-8 transition-transform hover:scale-105 relative group">
                             <img
                                 src={profile?.avatar_url || `https://avatar.vercel.sh/${profile?.username || 'user'}`}
-                                className="w-full h-full object-cover rounded-[2.5rem]"
+                                className="w-full h-full object-cover rounded-[3rem]"
                                 alt="Profile"
                             />
+                            <div className="absolute inset-0 ring-1 ring-inset ring-black/5 rounded-[3rem]"></div>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-900">{profile?.username || 'Joueur'}</h2>
-                        <div className="flex space-x-2 mt-3">
-                            <span className="px-4 py-1.5 bg-emerald-400/10 text-emerald-500 text-xs font-bold rounded-full border border-emerald-400/20">
+                        <h2 className="text-3xl font-bold text-sport-navy tracking-tight">{profile?.username || 'Joueur'}</h2>
+                        <div className="flex flex-wrap justify-center gap-3 mt-4">
+                            <span className="px-5 py-2 bg-sport-green text-white text-[10px] font-bold rounded-xl uppercase tracking-widest shadow-lg shadow-sport-green/20">
                                 {profile?.level || 'Débutant'}
                             </span>
-                            <span className="px-4 py-1.5 bg-sky-400/10 text-sky-500 text-xs font-bold rounded-full border border-sky-400/20">
+                            <span className="px-5 py-2 bg-white text-sport-navy text-[10px] font-bold rounded-xl uppercase tracking-widest border border-sport-sand shadow-sm">
                                 {profile?.region || 'National'}
                             </span>
                             {profile?.role === 'admin' && (
-                                <span className="px-4 py-1.5 bg-amber-400/10 text-amber-600 text-xs font-bold rounded-full border border-amber-400/20 flex items-center">
-                                    <span className="mr-1">🛡️</span> Admin
+                                <span className="px-5 py-2 bg-sport-navy text-white text-[10px] font-bold rounded-xl uppercase tracking-widest flex items-center shadow-lg shadow-sport-navy/20">
+                                    <ShieldAlert size={12} className="mr-2" /> Admin
                                 </span>
                             )}
                         </div>
-                        {profile?.bio && <p className="mt-6 text-center text-slate-500 text-sm italic px-8 leading-relaxed max-w-sm">"{profile.bio}"</p>}
+                        {profile?.bio && <p className="mt-8 text-center text-slate-500 text-sm italic px-10 leading-relaxed max-w-md opacity-80 font-medium">"{profile.bio}"</p>}
                     </div>
 
-                    <div className="space-y-6">
-                        {/* STATISTIQUES CARTE */}
-                        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/5 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
-                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-8 relative z-10">Performances</h3>
-                            <div className="grid grid-cols-3 gap-4 relative z-10">
-                                <div>
-                                    <p className="text-2xl font-bold text-slate-900">{profile?.matches_played || 0}</p>
-                                    <p className="text-[10px] text-slate-400 uppercase font-bold mt-1">Matchs</p>
+                    <div className="space-y-8">
+                        {/* STATISTIQUES CARTE - STYLE CLUB PRIVE */}
+                        <div className="bg-sport-navy p-10 rounded-[3rem] text-white relative overflow-hidden group shadow-2xl shadow-sport-navy/20">
+                            <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -mr-20 -mt-20 transition-transform group-hover:scale-110"></div>
+                            <div className="absolute bottom-4 right-8 opacity-10 font-black text-6xl italic select-none">PP</div>
+                            
+                            <h3 className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-10 relative z-10">Performances Circuit</h3>
+                            
+                            <div className="grid grid-cols-3 gap-8 relative z-10">
+                                <div className="space-y-1">
+                                    <p className="text-3xl font-bold tracking-tighter">{profile?.matches_played || 0}</p>
+                                    <p className="text-[9px] text-white/50 uppercase font-black tracking-widest">Matchs</p>
                                 </div>
-                                <div>
-                                    <p className="text-2xl font-bold text-emerald-400">{profile?.matches_played > 0 ? Math.round((profile.wins / profile.matches_played) * 100) : 0}%</p>
-                                    <p className="text-[10px] text-slate-400 uppercase font-bold mt-1">Victoires</p>
+                                <div className="space-y-1 border-x border-white/10 px-4">
+                                    <p className="text-3xl font-bold tracking-tighter text-sport-green">{profile?.matches_played > 0 ? Math.round((profile.wins / profile.matches_played) * 100) : 0}%</p>
+                                    <p className="text-[9px] text-white/50 uppercase font-black tracking-widest">Victoires</p>
                                 </div>
-                                <div>
-                                    <p className="text-2xl font-bold text-sky-400">{profile?.points || 0}</p>
-                                    <p className="text-[10px] text-slate-400 uppercase font-bold mt-1">Points</p>
+                                <div className="space-y-1 text-right">
+                                    <p className="text-3xl font-bold tracking-tighter text-white">{profile?.points || 0}</p>
+                                    <p className="text-[9px] text-white/50 uppercase font-black tracking-widest text-right">Points</p>
                                 </div>
                             </div>
                         </div>
 
                         {/* INFOS COMPLEMENTAIRES */}
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="p-6 bg-white border border-slate-100 rounded-3xl shadow-sm">
-                                <p className="text-[10px] text-slate-400 font-bold uppercase mb-2 block tracking-wider">Genre</p>
-                                <div className="flex items-center space-x-2">
-                                    <span className="text-lg">{profile?.gender === 'F' ? '👩' : '👨'}</span>
-                                    <p className="font-bold text-slate-700">{profile?.gender === 'F' ? 'Femme' : 'Homme'}</p>
+                            <div className="p-8 bg-white border border-sport-sand rounded-[2rem] shadow-sm flex flex-col space-y-4">
+                                <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.2em] block">Genre</p>
+                                <div className="flex items-center space-x-3">
+                                    <div className="w-10 h-10 bg-sport-beige rounded-2xl flex items-center justify-center text-xl shadow-inner">
+                                        {profile?.gender === 'F' ? '👩' : '👨'}
+                                    </div>
+                                    <p className="font-bold text-sport-navy text-sm uppercase">{profile?.gender === 'F' ? 'Femme' : 'Homme'}</p>
                                 </div>
                             </div>
-                            <div className="p-6 bg-white border border-slate-100 rounded-3xl shadow-sm group cursor-pointer hover:border-emerald-400/30 transition-colors">
-                                <p className="text-[10px] text-slate-400 font-bold uppercase mb-2 block tracking-wider">Rang</p>
-                                <div className="flex items-center space-x-2">
-                                    <span className="text-lg">🥇</span>
-                                    <p className="font-bold text-slate-700">#---</p>
+                            <div className="p-8 bg-white border border-sport-sand rounded-[2rem] shadow-sm flex flex-col space-y-4 group cursor-pointer hover:border-sport-green/30 transition-all">
+                                <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.2em] block">Rang National</p>
+                                <div className="flex items-center space-x-3">
+                                    <div className="w-10 h-10 bg-sport-beige rounded-2xl flex items-center justify-center text-xl shadow-inner group-hover:bg-sport-green group-hover:text-white transition-all">
+                                        🥇
+                                    </div>
+                                    <p className="font-bold text-sport-navy text-sm uppercase tracking-tighter">Non Classé</p>
                                 </div>
                             </div>
                             {/* AIDE & SUPPORT */}
                             <div
                                 onClick={() => window.location.href = '/help'}
-                                className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center space-x-4 cursor-pointer hover:border-sky-400/30 transition-all group"
+                                className="col-span-2 bg-white px-8 py-6 rounded-[2.5rem] border border-sport-sand shadow-sm flex items-center space-x-6 cursor-pointer hover:border-sport-green transition-all group"
                             >
-                                <div className="w-10 h-10 bg-sky-50 rounded-xl flex items-center justify-center text-sky-500 group-hover:bg-sky-500 group-hover:text-white transition-all">
-                                    <HelpCircle size={20} />
+                                <div className="w-14 h-14 bg-sport-beige rounded-[1.5rem] flex items-center justify-center text-sport-green group-hover:bg-sport-green group-hover:text-white transition-all shadow-inner">
+                                    <HelpCircle size={24} />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="font-bold text-slate-900 text-sm">Centre d'Aide</p>
-                                    <p className="text-xs text-slate-400">Questions, support et signalements.</p>
+                                    <p className="font-bold text-sport-navy text-sm uppercase tracking-tight">Support & Assistance</p>
+                                    <p className="text-[11px] text-slate-400 italic">Une question ? Notre équipe est là.</p>
                                 </div>
-                                <div className="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:text-sky-500 transition-colors">
+                                <div className="w-10 h-10 rounded-full bg-sport-beige flex items-center justify-center text-slate-300 group-hover:text-sport-green group-hover:rotate-45 transition-all">
                                     →
                                 </div>
                             </div>

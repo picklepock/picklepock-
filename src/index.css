@@ -3,33 +3,43 @@
 @tailwind utilities;
 
 :root {
-  --sport-green: #10b981;
-  --light-blue: #0ea5e9;
+  --sport-green: #059669;
+  --sport-navy: #0F172A;
+  --sport-beige: #F5F2EE;
+  --sport-sand: #E5E1DA;
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased overflow-x-hidden;
+  @apply bg-sport-beige text-sport-navy antialiased overflow-x-hidden;
   font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Custom styles for Modern Bottom Navigation */
+/* Scrollbar Style Prestige */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-sport-sand rounded-full;
+}
+
+/* Navigation Moderne - CLUB HOUSE PRESTIGE */
 .bottom-nav-item {
-  @apply flex flex-col items-center justify-center w-full h-full transition-all duration-300 relative;
-}
-
-.bottom-nav-item.active {
-  @apply text-emerald-400 scale-110;
-}
-
-.bottom-nav-item:not(.active) {
-  @apply text-slate-400;
+  @apply flex flex-col items-center justify-center w-full transition-all duration-500 relative;
 }
 
 .nav-dot {
-  @apply absolute -bottom-1 w-1 h-1 bg-emerald-400 rounded-full opacity-0 scale-0 transition-all duration-300;
+  @apply absolute bottom-0 w-2 h-2 bg-sport-green rounded-full opacity-0 scale-0 transition-all duration-500 shadow-[0_0_12px_rgba(5,150,105,0.8)];
 }
 
 .active .nav-dot {
   @apply opacity-100 scale-100;
+}
+
+/* Common Sport Badges */
+.badge-sport {
+  @apply text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border border-sport-sand bg-white/50 backdrop-blur-sm shadow-sm text-sport-navy transition-all duration-300;
 }

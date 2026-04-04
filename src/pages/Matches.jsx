@@ -93,30 +93,30 @@ const Matches = ({ session }) => {
         <div className="p-6 pb-24 space-y-8 max-w-lg mx-auto">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Circuit</h1>
-                    <p className="text-slate-500 mt-1">Trouvez un défi à votre taille.</p>
+                    <h1 className="text-3xl font-bold text-sport-navy tracking-tight">Circuit</h1>
+                    <p className="text-slate-500 mt-1 italic font-medium">Trouvez un défi à votre taille.</p>
                 </div>
                 <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="bg-emerald-400 text-white p-3 rounded-2xl shadow-lg shadow-emerald-400/20 active:scale-95 transition-all flex items-center space-x-2"
+                    className="bg-sport-green text-white p-3 rounded-2xl shadow-xl shadow-sport-green/20 active:scale-95 transition-all flex items-center space-x-2"
                 >
                     <PlusCircle size={20} />
                     <span className="text-sm font-bold pr-1">Créer</span>
                 </button>
             </header>
 
-            <div className="flex bg-slate-100 p-1.5 rounded-[2rem]">
+            <div className="flex bg-sport-sand/40 p-1.5 rounded-[2rem] border border-sport-sand">
                 <button
                     onClick={() => setView('matchs')}
-                    className={`flex-1 py-3 rounded-[1.5rem] text-sm font-bold transition-all ${view === 'matchs' ? 'bg-white text-emerald-400 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    className={`flex-1 py-3 rounded-[1.5rem] text-xs font-bold transition-all ${view === 'matchs' ? 'bg-sport-navy text-white shadow-lg' : 'text-slate-400 hover:text-sport-navy'}`}
                 >
                     Matchs
                 </button>
                 <button
                     onClick={() => setView('tournois')}
-                    className={`flex-1 py-3 rounded-[1.5rem] text-sm font-bold transition-all ${view === 'tournois' ? 'bg-white text-sky-400 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    className={`flex-1 py-3 rounded-[1.5rem] text-xs font-bold transition-all ${view === 'tournois' ? 'bg-sport-navy text-white shadow-lg' : 'text-slate-400 hover:text-sport-navy'}`}
                 >
-                    Tournois {view === 'tournois' && <span className="text-[10px] ml-1 bg-sky-50 px-1.5 py-0.5 rounded-md uppercase">Bientôt</span>}
+                    Tournois {view === 'tournois' && <span className="text-[9px] ml-1 bg-white/10 px-1.5 py-0.5 rounded-md uppercase tracking-widest font-black italic">Soon</span>}
                 </button>
             </div>
 
@@ -129,112 +129,112 @@ const Matches = ({ session }) => {
                 <div className="space-y-4">
                     {matches.length > 0 ? (
                         matches.map((match) => (
-                            <div key={match.id} className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all group overflow-hidden relative">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="flex items-center space-x-3">
-                                        <div className="w-10 h-10 rounded-2xl bg-slate-50 overflow-hidden border border-slate-100">
+                            <div key={match.id} className="bg-white p-6 rounded-[2.5rem] border border-sport-sand shadow-sm hover:shadow-md transition-all group overflow-hidden relative">
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className="flex items-center space-x-4">
+                                        <div className="w-12 h-12 rounded-2xl bg-sport-beige overflow-hidden border border-sport-sand shadow-inner">
                                             <img 
                                                 src={match.creator?.avatar_url || `https://avatar.vercel.sh/${match.creator?.username}`} 
                                                 className="w-full h-full object-cover"
                                             />
                                         </div>
                                         <div>
-                                            <p className="text-xs font-bold text-slate-900">{match.creator?.username || 'Joueur'}</p>
-                                            <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider">{match.category}</p>
+                                            <p className="text-sm font-bold text-sport-navy group-hover:text-sport-green transition-colors">{match.creator?.username || 'Joueur'}</p>
+                                            <p className="text-[10px] text-sport-green font-bold uppercase tracking-widest">{match.category}</p>
                                         </div>
                                     </div>
-                                    <span className="text-[10px] font-black bg-slate-900 text-white px-3 py-1.5 rounded-xl uppercase tracking-tighter">
+                                    <span className="text-[9px] font-bold bg-sport-sand text-sport-navy px-3 py-1.5 rounded-xl uppercase tracking-widest border border-white">
                                         {match.type}
                                     </span>
                                 </div>
 
-                                <div className="space-y-3 mb-6">
+                                <div className="space-y-4 mb-8 px-1">
                                     <div className="flex items-center text-slate-600 space-x-3">
-                                        <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                                        <div className="w-8 h-8 rounded-xl bg-sport-beige flex items-center justify-center text-sport-navy shadow-sm">
                                             <MapPin size={16} />
                                         </div>
                                         <p className="text-sm font-bold text-slate-700">{match.location}</p>
                                     </div>
-                                    <div className="flex items-center space-x-6 pl-1">
+                                    <div className="flex items-center space-x-6">
                                         <div className="flex items-center text-slate-400 space-x-2">
-                                            <Calendar size={14} />
-                                            <span className="text-xs font-semibold">{new Date(match.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                                            <Calendar size={14} className="text-sport-green" />
+                                            <span className="text-xs font-bold uppercase tracking-tighter">{new Date(match.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
                                         </div>
                                         <div className="flex items-center text-slate-400 space-x-2">
-                                            <Clock size={14} />
-                                            <span className="text-xs font-semibold">{match.time.slice(0, 5)}</span>
+                                            <Clock size={14} className="text-sport-green" />
+                                            <span className="text-xs font-bold uppercase tracking-tighter">{match.time.slice(0, 5)}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <button className="w-full py-4 bg-slate-50 hover:bg-emerald-400 hover:text-white text-slate-600 rounded-2xl font-bold text-sm transition-all border border-slate-100/50 group-hover:border-emerald-400/20">
+                                <button className="w-full py-5 bg-sport-beige hover:bg-sport-green hover:text-white text-sport-navy rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border border-sport-sand shadow-sm active:scale-95">
                                     Rejoindre le match
                                 </button>
                             </div>
                         ))
                     ) : (
                         <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-                            <div className="w-20 h-20 bg-slate-50 rounded-[2.5rem] flex items-center justify-center text-3xl opacity-50 grayscale">🏸</div>
-                            <h2 className="text-lg font-bold text-slate-900">Aucun match ici</h2>
-                            <p className="text-slate-400 text-sm max-w-[200px] mx-auto mt-1">Soyez le premier à lancer un défi !</p>
+                            <div className="w-20 h-20 bg-sport-sand/30 rounded-[3rem] flex items-center justify-center text-3xl opacity-50 grayscale border border-sport-sand">🏸</div>
+                            <h2 className="text-lg font-bold text-sport-navy">Aucun match ici</h2>
+                            <p className="text-slate-400 text-sm max-w-[200px] mx-auto mt-1 italic font-medium">Soyez le premier à lancer un défi !</p>
                         </div>
                     )}
                 </div>
             ) : (
                 <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-                    <div className="w-20 h-20 bg-slate-50 rounded-[2.5rem] flex items-center justify-center text-3xl opacity-50 grayscale">🏆</div>
-                    <h2 className="text-lg font-bold text-slate-900">Tournois à venir</h2>
-                    <p className="text-slate-400 text-sm max-w-[200px] mx-auto mt-1">La saison compétitive arrive bientôt. Restez branchés !</p>
+                    <div className="w-20 h-20 bg-sport-sand/30 rounded-[3rem] flex items-center justify-center text-3xl opacity-50 grayscale border border-sport-sand">🏆</div>
+                    <h2 className="text-lg font-bold text-sport-navy">Tournois à venir</h2>
+                    <p className="text-slate-400 text-sm max-w-[200px] mx-auto mt-1 italic font-medium">La saison compétitive arrive bientôt. Restez branchés !</p>
                 </div>
             )}
 
             {/* MODAL CREATION MATCH */}
             {isCreateModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300 font-['Outfit']">
-                    <div className="w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-500">
-                        <div className="p-8 border-b border-slate-50 flex justify-between items-center">
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-sport-navy/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="w-full max-w-lg bg-sport-beige rounded-[3rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-500 border border-white/20">
+                        <div className="p-8 border-b border-sport-sand/50 flex justify-between items-center bg-white/50">
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-900">Créer un match</h2>
-                                <p className="text-slate-500 text-sm mt-1">Remplissez les détails du défi.</p>
+                                <h2 className="text-2xl font-bold text-sport-navy tracking-tight">Créer un match</h2>
+                                <p className="text-slate-500 text-xs mt-1 italic">Remplissez les détails du défi officiel.</p>
                             </div>
-                            <button onClick={() => setIsCreateModalOpen(false)} className="p-3 bg-slate-50 rounded-2xl text-slate-400 hover:text-slate-600 transition-colors">
+                            <button onClick={() => setIsCreateModalOpen(false)} className="p-3 bg-white rounded-2xl text-slate-400 hover:text-sport-navy transition-colors shadow-sm">
                                 <X size={20} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleCreateMatch} className="p-8 space-y-6">
-                            <div className="grid grid-cols-2 gap-4">
+                        <form onSubmit={handleCreateMatch} className="p-10 space-y-8 bg-white/30">
+                            <div className="grid grid-cols-2 gap-6">
                                 <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Date</label>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Date</label>
                                     <input
                                         type="date"
                                         required
                                         value={matchData.date}
                                         onChange={e => setMatchData({ ...matchData, date: e.target.value })}
-                                        className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-emerald-400 transition-all font-semibold text-slate-700"
+                                        className="w-full p-4 bg-white border border-sport-sand rounded-2xl focus:outline-none focus:border-sport-green transition-all font-bold text-sm text-sport-navy shadow-sm"
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Heure</label>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Heure</label>
                                     <input
                                         type="time"
                                         required
                                         value={matchData.time}
                                         onChange={e => setMatchData({ ...matchData, time: e.target.value })}
-                                        className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-emerald-400 transition-all font-semibold text-slate-700"
+                                        className="w-full p-4 bg-white border border-sport-sand rounded-2xl focus:outline-none focus:border-sport-green transition-all font-bold text-sm text-sport-navy shadow-sm"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Lieu (Club PicklePock)</label>
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Lieu (Club PicklePock)</label>
                                 <div className="relative">
-                                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-sport-green" size={18} />
                                     <select
                                         required
                                         value={matchData.location}
                                         onChange={e => setMatchData({ ...matchData, location: e.target.value })}
-                                        className="w-full pl-12 pr-10 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-emerald-400 transition-all appearance-none font-bold text-slate-700 cursor-pointer"
+                                        className="w-full pl-12 pr-10 py-4 bg-white border border-sport-sand rounded-2xl focus:outline-none focus:border-sport-green transition-all appearance-none font-bold text-sm text-sport-navy cursor-pointer shadow-sm"
                                     >
                                         <option value="">Choisir un club officiel...</option>
                                         {clubs.length > 0 ? clubs.map(club => (
@@ -247,29 +247,26 @@ const Matches = ({ session }) => {
                                         <Filter size={16} />
                                     </div>
                                 </div>
-                                {clubs.length === 0 && (
-                                    <p className="mt-2 text-[10px] text-amber-500 font-bold bg-amber-50 p-2 rounded-lg">⚠️ Aucun club officiel chargé. Vérifiez votre base de données.</p>
-                                )}
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-6">
                                 <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Format</label>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Format</label>
                                     <select
                                         value={matchData.players_count}
                                         onChange={e => setMatchData({ ...matchData, players_count: e.target.value })}
-                                        className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-emerald-400 transition-all font-semibold text-slate-700"
+                                        className="w-full p-4 bg-white border border-sport-sand rounded-2xl focus:outline-none focus:border-sport-green transition-all font-bold text-sm text-sport-navy shadow-sm"
                                     >
                                         <option value="2">Simple (1 vs 1)</option>
                                         <option value="4">Double (2 vs 2)</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Niveau Requis</label>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Niveau</label>
                                     <select
                                         value={matchData.category}
                                         onChange={e => setMatchData({ ...matchData, category: e.target.value })}
-                                        className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-emerald-400 transition-all font-semibold text-slate-700"
+                                        className="w-full p-4 bg-white border border-sport-sand rounded-2xl focus:outline-none focus:border-sport-green transition-all font-bold text-sm text-sport-navy shadow-sm"
                                     >
                                         <option>Débutant</option>
                                         <option>Intermédiaire</option>
@@ -282,14 +279,14 @@ const Matches = ({ session }) => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-5 bg-emerald-400 text-white rounded-[2rem] font-bold text-sm shadow-xl shadow-emerald-400/20 active:scale-95 transition-all flex items-center justify-center space-x-2"
+                                className="w-full py-5 bg-sport-navy text-white rounded-[2rem] font-bold text-xs uppercase tracking-[0.2em] shadow-2xl shadow-sport-navy/30 active:scale-95 transition-all flex items-center justify-center space-x-3 group"
                             >
                                 {loading ? (
                                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                 ) : (
                                     <>
-                                        <Check size={20} />
-                                        <span>Publier le match</span>
+                                        <PlusCircle size={20} className="group-hover:rotate-90 transition-transform duration-500" />
+                                        <span>Publier sur le circuit</span>
                                     </>
                                 )}
                             </button>

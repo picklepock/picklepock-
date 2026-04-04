@@ -3,32 +3,34 @@ const Accueil = () => {
         <div className="p-6 pb-24 space-y-8">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Bonjour 👋</h1>
-                    <p className="text-slate-500 mt-1">Prêt pour votre prochain match ?</p>
+                    <h1 className="text-3xl font-bold text-sport-navy tracking-tight">Bonjour 👋</h1>
+                    <p className="text-slate-500 mt-1 italic font-medium">Prêt pour votre prochain match ?</p>
                 </div>
-                <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
+                <div className="p-2 bg-white rounded-2xl shadow-sm border border-sport-sand">
+                    <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+                </div>
             </header>
 
             <section className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-slate-900">Événements à la une</h2>
-                    <button className="text-emerald-400 text-sm font-semibold">Voir tout</button>
+                <div className="flex items-center justify-between px-1">
+                    <h2 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Événements à la une</h2>
+                    <button className="text-sport-green text-sm font-bold hover:underline transition-all">Voir tout</button>
                 </div>
 
-                <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm border border-slate-100 group cursor-pointer transition-all hover:shadow-md">
+                <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm border border-sport-sand group cursor-pointer transition-all hover:shadow-lg hover:border-sport-green/20">
                     <div className="relative h-48 overflow-hidden">
                         <img
                             src="https://images.unsplash.com/photo-1626225965071-8231c1ca9248?q=80&w=600&h=400&auto=format&fit=crop"
                             alt="Tournoi de Pickleball"
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
-                        <div className="absolute top-4 left-4 bg-emerald-400 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Bientôt</div>
+                        <div className="absolute top-4 left-4 bg-sport-green text-white px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-sport-green/20">Bientôt</div>
                     </div>
-                    <div className="p-6">
-                        <h3 className="text-xl font-bold text-slate-900 mb-1">Open Régional 2026</h3>
-                        <p className="text-slate-500 text-sm mb-4">Inscriptions ouvertes pour le circuit amateur.</p>
-                        <div className="flex items-center text-xs font-semibold text-slate-400 space-x-4">
-                            <span className="flex items-center">📅 22 Mars</span>
+                    <div className="p-8">
+                        <h3 className="text-2xl font-bold text-sport-navy mb-1">Open Régional 2026</h3>
+                        <p className="text-slate-500 text-sm mb-6 leading-relaxed">Inscriptions ouvertes pour le circuit amateur de printemps.</p>
+                        <div className="flex items-center text-xs font-bold text-slate-400 space-x-6">
+                            <span className="flex items-center">🟢 22 Mars</span>
                             <span className="flex items-center">📍 Paris Sud</span>
                         </div>
                     </div>
@@ -36,29 +38,31 @@ const Accueil = () => {
             </section>
 
             <section className="space-y-4">
-                <h2 className="text-lg font-bold text-slate-900">Raccourcis</h2>
+                <h2 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em] px-1">Raccourcis</h2>
                 <div className="grid grid-cols-2 gap-4">
-                    <button className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center justify-center space-y-3 hover:shadow-md transition-all active:scale-95 group">
-                        <div className="w-12 h-12 bg-sky-400/10 rounded-2xl flex items-center justify-center text-sky-400 group-hover:bg-sky-400 group-hover:text-white transition-colors">🏆</div>
-                        <span className="font-bold text-slate-700 text-sm text-center">Mes Matchs</span>
+                    <button className="bg-white p-6 rounded-[2rem] shadow-sm border border-sport-sand flex flex-col items-center justify-center space-y-4 hover:shadow-md hover:border-sport-green/20 transition-all active:scale-95 group">
+                        <div className="w-14 h-14 bg-sport-beige rounded-2xl flex items-center justify-center text-xl shadow-inner group-hover:bg-sport-green group-hover:text-white transition-all">🏆</div>
+                        <span className="font-bold text-sport-navy text-xs uppercase tracking-wider">Mes Matchs</span>
                     </button>
-                    <button className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center justify-center space-y-3 hover:shadow-md transition-all active:scale-95 group">
-                        <div className="w-12 h-12 bg-emerald-400/10 rounded-2xl flex items-center justify-center text-emerald-400 group-hover:bg-emerald-400 group-hover:text-white transition-colors">📍</div>
-                        <span className="font-bold text-slate-700 text-sm text-center">Clubs Proches</span>
+                    <button className="bg-white p-6 rounded-[2rem] shadow-sm border border-sport-sand flex flex-col items-center justify-center space-y-4 hover:shadow-md hover:border-sport-green/20 transition-all active:scale-95 group">
+                        <div className="w-14 h-14 bg-sport-beige rounded-2xl flex items-center justify-center text-xl shadow-inner group-hover:bg-sport-green group-hover:text-white transition-all">📍</div>
+                        <span className="font-bold text-sport-navy text-xs uppercase tracking-wider">Clubs Proches</span>
                     </button>
                 </div>
             </section>
 
-            <section className="bg-emerald-400 rounded-[2rem] p-8 text-white relative overflow-hidden shadow-xl shadow-emerald-400/20">
+            <section className="bg-sport-navy rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-2xl shadow-sport-navy/10 ring-1 ring-white/10">
                 <div className="relative z-10">
-                    <h2 className="text-2xl font-bold mb-2">Devenir Pro ?</h2>
-                    <p className="text-emerald-50 opacity-90 text-sm mb-6 max-w-[200px]">Rejoignez le classement national et défiez les meilleurs.</p>
-                    <button className="bg-white text-emerald-400 px-6 py-3 rounded-xl font-bold text-sm shadow-lg">En savoir plus</button>
+                    <h2 className="text-2xl font-bold mb-2 tracking-tight">Devenir Pro ?</h2>
+                    <p className="text-slate-300 text-xs mb-8 max-w-[180px] leading-relaxed opacity-80">Rejoignez le classement national et défiez les meilleurs joueurs.</p>
+                    <button className="bg-sport-green text-white px-8 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-sport-green/20 hover:scale-105 active:scale-95 transition-all">En savoir plus</button>
                 </div>
-                <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-white/20 rounded-full blur-3xl"></div>
+                <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-sport-green/10 rounded-full blur-3xl"></div>
+                <div className="absolute top-4 right-4 w-12 h-12 bg-white/5 rounded-full border border-white/10 flex items-center justify-center italic font-bold text-white/20 select-none text-2xl">P</div>
             </section>
         </div>
     );
 };
+
 
 export default Accueil;

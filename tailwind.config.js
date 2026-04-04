@@ -7,8 +7,10 @@ export default {
     theme: {
         extend: {
             colors: {
-                'sport-green': '#4ADE80', // Emerald 400
-                'light-blue': '#38BDF8', // Sky 400
+                'sport-green': '#059669', // Emerald 600 (Plus foncé & pro)
+                'sport-beige': '#F5F2EE', // Beige doux et sobre
+                'sport-navy': '#0F172A', // Bleu marine profond
+                'sport-sand': '#E7E2D8', // Beige d'accent pour les cartes
             },
         },
     },

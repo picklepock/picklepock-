@@ -94,162 +94,181 @@ const Help = ({ session }) => {
     };
 
     return (
-        <div className="p-6 pb-24 space-y-8 max-w-lg mx-auto">
-            <header>
-                <div className="w-16 h-16 bg-emerald-400/10 rounded-2xl flex items-center justify-center text-emerald-500 mb-6">
-                    <HelpCircle size={32} />
+        <div className="p-6 pb-24 space-y-10 max-w-lg mx-auto text-sport-navy">
+            <header className="animate-in fade-in slide-in-from-top duration-700">
+                <div className="w-20 h-20 bg-sport-sand rounded-[2.5rem] flex items-center justify-center text-sport-green mb-8 shadow-inner border border-white/50">
+                    <HelpCircle size={36} />
                 </div>
-                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Centre d'Aide</h1>
-                <p className="text-slate-500 mt-2">Comment pouvons-nous vous aider aujourd'hui ?</p>
+                <h1 className="text-4xl font-bold tracking-tight text-sport-navy leading-tight">Centre<br />d'Assistance</h1>
+                <p className="text-slate-500 mt-3 text-sm italic font-medium">Comment pouvons-nous vous aider aujourd'hui ?</p>
             </header>
 
             {/* TABS UPGRADE */}
-            <div className="flex bg-slate-100 p-1 rounded-2xl">
+            <div className="flex bg-sport-sand/30 p-1.5 rounded-[2rem] border border-sport-sand">
                 <button 
                     onClick={() => { setActiveTab('new'); setSelectedTicket(null); }}
-                    className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === 'new' ? 'bg-white text-emerald-500 shadow-sm' : 'text-slate-500'}`}
+                    className={`flex-1 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'new' ? 'bg-sport-navy text-white shadow-xl shadow-sport-navy/20' : 'text-slate-400'}`}
                 >
-                    Nouveau message
+                    Nouveau Ticket
                 </button>
                 <button 
                     onClick={() => setActiveTab('history')}
-                    className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${activeTab === 'history' ? 'bg-white text-emerald-500 shadow-sm' : 'text-slate-500'}`}
+                    className={`flex-1 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'history' ? 'bg-sport-navy text-white shadow-xl shadow-sport-navy/20' : 'text-slate-400'}`}
                 >
-                    Mes demandes {myMessages.length > 0 && `(${myMessages.length})`}
+                    Historique {myMessages.length > 0 && `(${myMessages.length})`}
                 </button>
             </div>
 
-            <section className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm min-h-[300px]">
+            <section className="animate-in fade-in duration-500">
                 {activeTab === 'new' ? (
                     sent ? (
-                        <div className="py-12 text-center space-y-4 animate-in zoom-in duration-300">
-                            <div className="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto">
-                                <Send size={28} />
+                        <div className="py-20 text-center space-y-6 animate-in zoom-in duration-500 bg-white rounded-[3rem] border border-sport-sand shadow-sm">
+                            <div className="w-20 h-20 bg-sport-green text-white rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-sport-green/30">
+                                <Send size={32} />
                             </div>
-                            <p className="font-bold text-emerald-600">Message envoyé !</p>
-                            <p className="text-slate-400 text-sm">Nous traiterons votre demande sous peu.</p>
+                            <div>
+                                <p className="font-bold text-xl text-sport-navy tracking-tight">Transmission réussie !</p>
+                                <p className="text-slate-400 text-xs mt-2 italic">Nous traiterons votre demande sous peu.</p>
+                            </div>
                         </div>
                     ) : (
-                        <form onSubmit={handleSendMessage} className="space-y-6">
+                        <form onSubmit={handleSendMessage} className="space-y-10">
                             <div>
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 mb-4 block">Catégorie</label>
-                                <div className="grid grid-cols-2 gap-3">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-1 mb-6 block">Nature du problème</label>
+                                <div className="grid grid-cols-2 gap-4">
                                     {categories.map((cat) => (
                                         <button
                                             key={cat.id}
                                             type="button"
                                             onClick={() => setCategory(cat.id)}
-                                            className={`p-4 rounded-2xl border text-left transition-all ${category === cat.id
-                                                ? 'bg-emerald-400 border-emerald-400 text-white shadow-lg shadow-emerald-400/20'
-                                                : 'bg-slate-50 border-slate-100 text-slate-600 hover:border-emerald-200'
+                                            className={`p-6 rounded-[2rem] border text-left transition-all duration-300 group ${category === cat.id
+                                                ? 'bg-sport-green border-sport-green text-white shadow-2xl shadow-sport-green/20 scale-[1.02]'
+                                                : 'bg-white border-sport-sand text-sport-navy hover:border-sport-green/50 opacity-70 hover:opacity-100 shadow-sm'
                                                 }`}
                                         >
-                                            <span className="block text-xl mb-1">{cat.icon}</span>
-                                            <span className="text-xs font-bold">{cat.label}</span>
+                                            <span className="block text-2xl mb-2 group-hover:scale-110 transition-transform">{cat.icon}</span>
+                                            <span className="text-[10px] font-black uppercase tracking-widest leading-none">{cat.label}</span>
                                         </button>
                                     ))}
                                 </div>
                             </div>
 
                             <div>
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 mb-3 block">Message</label>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-1 mb-4 block">Votre message</label>
                                 <textarea
                                     value={message}
                                     onChange={(e) => setMessage(e.target.value)}
                                     required
-                                    placeholder="Décrivez votre situation..."
+                                    placeholder="Décrivez votre situation avec précision..."
                                     rows="5"
-                                    className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-400/10 focus:border-emerald-400 transition-all text-slate-900 placeholder:text-slate-400 resize-none"
+                                    className="w-full p-8 bg-sport-beige/20 border border-sport-sand rounded-[2.5rem] focus:outline-none focus:ring-4 focus:ring-sport-green/5 focus:border-sport-green transition-all text-sport-navy placeholder:text-slate-400 font-bold text-sm shadow-inner"
                                 ></textarea>
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={loading || !message}
-                                className={`w-full py-5 rounded-[2rem] font-bold flex items-center justify-center space-x-2 transition-all shadow-xl ${loading ? 'bg-slate-100 text-slate-400' : 'bg-emerald-400 text-white shadow-emerald-400/20 active:scale-95'
+                                className={`w-full py-6 rounded-[2.5rem] font-bold uppercase tracking-[0.3em] text-[10px] flex items-center justify-center space-x-3 transition-all duration-500 shadow-2xl ${loading || !message ? 'bg-slate-100 text-slate-300' : 'bg-sport-navy text-white shadow-sport-navy/30 hover:bg-sport-green active:scale-95'
                                     }`}
                             >
-                                <Send size={18} />
-                                <span>{loading ? 'Envoi en cours...' : 'Envoyer la demande'}</span>
+                                {loading ? (
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                ) : (
+                                    <>
+                                        <Send size={18} />
+                                        <span>Soumettre au Circuit</span>
+                                    </>
+                                )}
                             </button>
                         </form>
                     )
                 ) : selectedTicket ? (
-                    /* VUE DETAIL TICKET (CHAT) */
-                    <div className="space-y-6 animate-in fade-in duration-300">
-                        <button onClick={() => setSelectedTicket(null)} className="flex items-center text-slate-400 font-bold text-xs uppercase tracking-widest">
-                            <ArrowRight size={14} className="rotate-180 mr-1" /> Retour
+                    /* CHAT TICKET PREMIUM */
+                    <div className="space-y-8 animate-in slide-in-from-right duration-500">
+                        <button onClick={() => setSelectedTicket(null)} className="flex items-center text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] hover:text-sport-navy transition-colors">
+                            <ArrowRight size={16} className="rotate-180 mr-2" /> Retour à l'historique
                         </button>
                         
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-start">
-                                <span className={`text-[10px] font-bold px-2 py-1 rounded-lg uppercase ${selectedTicket.status === 'unread' ? 'bg-sky-100 text-sky-500' : 'bg-emerald-100 text-emerald-500'}`}>
-                                    {selectedTicket.status === 'unread' ? 'En attente' : 'Répondu'}
-                                </span>
-                                <span className="text-[10px] text-slate-300">{new Date(selectedTicket.created_at).toLocaleDateString()}</span>
+                        <div className="bg-white rounded-[3rem] border border-sport-sand shadow-2xl overflow-hidden flex flex-col h-[500px]">
+                            <div className="p-8 bg-sport-navy text-white flex justify-between items-center">
+                                <div>
+                                    <div className="flex items-center space-x-2">
+                                        <span className={`w-2 h-2 rounded-full animate-pulse ${selectedTicket.status === 'unread' ? 'bg-sky-400' : 'bg-sport-green'}`}></span>
+                                        <h3 className="font-bold text-sm tracking-tight">{selectedTicket.category}</h3>
+                                    </div>
+                                    <p className="text-[10px] text-white/40 uppercase tracking-widest mt-1">Ticket #{selectedTicket.id.slice(0, 8)}</p>
+                                </div>
+                                <span className="text-[10px] text-white/50 font-black italic">{new Date(selectedTicket.created_at).toLocaleDateString()}</span>
                             </div>
 
-                            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-                                {/* Message utilisateur */}
-                                <div className="bg-slate-100 p-4 rounded-2xl rounded-tl-none max-w-[90%]">
-                                    <p className="text-sm text-slate-700">{selectedTicket.content}</p>
+                            <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-sport-beige/20 shadow-inner">
+                                <div className="bg-white p-6 rounded-[2rem] rounded-tl-none max-w-[90%] shadow-sm border border-sport-sand font-medium text-sm leading-relaxed text-sport-navy">
+                                    <p className="text-[9px] font-black text-slate-300 uppercase mb-3 tracking-widest">Ma demande</p>
+                                    {selectedTicket.content}
                                 </div>
 
-                                {/* Réponses Admin */}
                                 {replies.map(rep => (
-                                    <div key={rep.id} className="bg-emerald-400 text-white p-4 rounded-2xl rounded-tr-none max-w-[90%] ml-auto">
-                                        <div className="flex items-center space-x-1 mb-1 opacity-80">
-                                            <ShieldAlert size={10} />
-                                            <span className="text-[9px] font-bold uppercase tracking-tighter">Support Admin</span>
+                                    <div key={rep.id} className="bg-sport-navy text-white p-6 rounded-[2rem] rounded-tr-none max-w-[90%] ml-auto shadow-xl shadow-sport-navy/10 font-medium text-sm leading-relaxed border border-white/5 relative group">
+                                        <div className="flex items-center space-x-2 mb-3 opacity-60">
+                                            <ShieldAlert size={12} className="text-sport-green" />
+                                            <span className="text-[9px] font-black uppercase tracking-[0.2em]">Assistance PicklePock</span>
                                         </div>
-                                        <p className="text-sm">{rep.content}</p>
+                                        <p>{rep.content}</p>
                                     </div>
                                 ))}
 
                                 {replies.length === 0 && (
-                                    <p className="text-center text-[11px] text-slate-400 py-4 italic">Aucune réponse pour le moment.</p>
+                                    <div className="text-center py-12 flex flex-col items-center space-y-3 opacity-30">
+                                        <Clock size={32} />
+                                        <p className="text-[10px] font-black uppercase tracking-widest">Analyse en cours...</p>
+                                    </div>
                                 )}
                             </div>
                         </div>
                     </div>
                 ) : (
-                    /* LISTE DES TICKETS */
+                    /* LISTE DES TICKETS PREMIUM */
                     <div className="space-y-4">
                         {loading && myMessages.length === 0 ? (
-                            <p className="text-center text-slate-400 py-10 italic">Chargement...</p>
+                            <div className="py-20 text-center opacity-20"><div className="w-8 h-8 border-2 border-sport-navy border-t-transparent rounded-full animate-spin mx-auto"></div></div>
                         ) : myMessages.length > 0 ? (
                             myMessages.map((msg) => (
                                 <div 
                                     key={msg.id}
                                     onClick={() => openTicket(msg)}
-                                    className="p-5 bg-white border border-slate-100 rounded-3xl shadow-sm hover:border-emerald-200 transition-all cursor-pointer group"
+                                    className="p-8 bg-white border border-sport-sand rounded-[2.5rem] shadow-sm hover:border-sport-green hover:shadow-xl hover:shadow-sport-navy/5 transition-all cursor-pointer group relative overflow-hidden"
                                 >
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50 px-2 py-1 rounded-lg">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <span className="text-[9px] font-black text-sport-green uppercase tracking-[0.2em] bg-sport-green/5 px-3 py-1.5 rounded-lg border border-sport-green/10">
                                             {msg.category}
                                         </span>
                                         {msg.status === 'in_progress' ? (
-                                            <span className="flex items-center text-emerald-500 text-[10px] font-bold">
-                                                <MessageCircle size={12} className="mr-1" /> Nouvelle réponse
+                                            <span className="flex items-center text-sport-green text-[9px] font-black uppercase tracking-widest animate-pulse">
+                                                <MessageCircle size={14} className="mr-2" /> Message reçu
                                             </span>
                                         ) : msg.status === 'unread' ? (
-                                            <span className="text-slate-300 text-[10px] font-bold uppercase tracking-widest flex items-center">
-                                                <Clock size={12} className="mr-1" /> En attente
+                                            <span className="text-slate-300 text-[9px] font-black uppercase tracking-widest flex items-center">
+                                                <Clock size={14} className="mr-2" /> En attente
                                             </span>
                                         ) : (
-                                            <CheckCircle2 size={16} className="text-emerald-400" />
+                                            <CheckCircle2 size={18} className="text-sport-green" />
                                         )}
                                     </div>
-                                    <p className="text-sm text-slate-700 font-medium line-clamp-1 group-hover:text-emerald-600 transition-colors">
+                                    <p className="text-sm text-sport-navy font-bold line-clamp-1 group-hover:text-sport-navy transition-colors tracking-tight">
                                         {msg.content}
                                     </p>
-                                    <p className="text-[10px] text-slate-300 mt-2">{new Date(msg.created_at).toLocaleDateString()}</p>
+                                    <div className="flex justify-between items-center mt-4 pt-4 border-t border-sport-sand/50">
+                                        <p className="text-[10px] text-slate-300 font-bold italic">{new Date(msg.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</p>
+                                        <ArrowRight size={14} className="text-slate-200 group-hover:text-sport-green group-hover:translate-x-1 transition-all" />
+                                    </div>
                                 </div>
                             ))
                         ) : (
-                            <div className="py-20 text-center space-y-3">
-                                <MessageSquare className="mx-auto text-slate-200" size={48} />
-                                <p className="text-slate-400 text-sm">Vous n'avez pas encore envoyé de demande.</p>
+                            <div className="py-24 text-center space-y-6 opacity-30 flex flex-col items-center">
+                                <div className="w-20 h-20 bg-sport-beige rounded-[2.5rem] flex items-center justify-center text-sport-green shadow-inner border border-sport-sand">
+                                    <MessageSquare size={40} />
+                                </div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em]">Aucune demande ouverte</p>
                             </div>
                         )}
                     </div>
