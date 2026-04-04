@@ -19,9 +19,11 @@ CREATE TABLE IF NOT EXISTS public.clubs (
     courts_count INTEGER DEFAULT 0,
     website TEXT,
     contact_email TEXT,
-    is_active BOOLEAN DEFAULT TRUE,
     approved_by UUID REFERENCES auth.users(id)
 );
+
+-- Securite : S'assurer que la colonne is_active existe (fix migration)
+ALTER TABLE public.clubs ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
 
 -- 2. Table des demandes d'enregistrement de club
 CREATE TABLE IF NOT EXISTS public.club_requests (
@@ -46,10 +48,12 @@ CREATE TABLE IF NOT EXISTS public.club_requests (
 -- Clubs: tout le monde peut lire les clubs actifs
 ALTER TABLE public.clubs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Clubs visibles par tous" ON public.clubs;
 CREATE POLICY "Clubs visibles par tous"
     ON public.clubs FOR SELECT
     USING (is_active = TRUE);
 
+DROP POLICY IF EXISTS "Seuls les admins peuvent inserer des clubs" ON public.clubs;
 CREATE POLICY "Seuls les admins peuvent inserer des clubs"
     ON public.clubs FOR INSERT
     WITH CHECK (
@@ -59,6 +63,7 @@ CREATE POLICY "Seuls les admins peuvent inserer des clubs"
         )
     );
 
+DROP POLICY IF EXISTS "Seuls les admins peuvent modifier des clubs" ON public.clubs;
 CREATE POLICY "Seuls les admins peuvent modifier des clubs"
     ON public.clubs FOR UPDATE
     USING (
@@ -68,6 +73,7 @@ CREATE POLICY "Seuls les admins peuvent modifier des clubs"
         )
     );
 
+DROP POLICY IF EXISTS "Seuls les admins peuvent supprimer des clubs" ON public.clubs;
 CREATE POLICY "Seuls les admins peuvent supprimer des clubs"
     ON public.clubs FOR DELETE
     USING (
@@ -80,14 +86,17 @@ CREATE POLICY "Seuls les admins peuvent supprimer des clubs"
 -- Club Requests: les utilisateurs peuvent soumettre et voir leurs propres demandes
 ALTER TABLE public.club_requests ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Les utilisateurs peuvent creer une demande" ON public.club_requests;
 CREATE POLICY "Les utilisateurs peuvent creer une demande"
     ON public.club_requests FOR INSERT
     WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Les utilisateurs voient leurs propres demandes" ON public.club_requests;
 CREATE POLICY "Les utilisateurs voient leurs propres demandes"
     ON public.club_requests FOR SELECT
     USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Les admins voient toutes les demandes" ON public.club_requests;
 CREATE POLICY "Les admins voient toutes les demandes"
     ON public.club_requests FOR SELECT
     USING (
@@ -97,6 +106,7 @@ CREATE POLICY "Les admins voient toutes les demandes"
         )
     );
 
+DROP POLICY IF EXISTS "Les admins peuvent modifier le statut des demandes" ON public.club_requests;
 CREATE POLICY "Les admins peuvent modifier le statut des demandes"
     ON public.club_requests FOR UPDATE
     USING (
