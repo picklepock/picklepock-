@@ -1,7 +1,9 @@
 -- ============================================================
 -- PICKLEPOCK - Setup Tables Clubs & Club Requests
--- Coller et executer dans l'editeur SQL de Supabase
 -- ============================================================
+
+-- 0. S'assurer que les profils ont la colonne admin
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;
 
 -- 1. Table principale des clubs (approuves par admin)
 CREATE TABLE IF NOT EXISTS public.clubs (
