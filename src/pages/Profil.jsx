@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { LogOut, Settings, UserCircle, Edit3, X, Check, Camera, ShieldAlert, HelpCircle, ArrowLeft, Send } from 'lucide-react';
+import { LogOut, Settings, UserCircle, Edit3, X, Check, Camera, ShieldAlert, HelpCircle, ArrowLeft, Send, MapPin, Phone, Clock, Image as ImageIcon, Trash2 } from 'lucide-react';
 import Login from './Login';
 
 const Profil = ({ session }) => {
@@ -21,6 +21,7 @@ const Profil = ({ session }) => {
     const [adminView, setAdminView] = useState(false); // To toggle admin panel in profile
     const [reports, setReports] = useState([]);
     const [supportMessages, setSupportMessages] = useState([]);
+    const [clubRequests, setClubRequests] = useState([]);
     const [adminSubTab, setAdminSubTab] = useState('reports');
     const [selectedMessage, setSelectedMessage] = useState(null);
     const [replies, setReplies] = useState([]);
@@ -90,11 +91,75 @@ const Profil = ({ session }) => {
                 .from('reports')
                 .select('*')
                 .order('created_at', { ascending: false });
+            
+            const { data: clubRequestsData } = await supabase
+                .from('club_requests')
+                .select('*')
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false });
 
             if (messagesData) setSupportMessages(messagesData);
             if (reportsData) setReports(reportsData);
+            if (clubRequestsData) setClubRequests(clubRequestsData);
         } catch (err) {
             console.error("Erreur admin:", err);
+        }
+    };
+
+    const handleApproveClub = async (req) => {
+        if (!window.confirm(`Approuver officiellement le club "${req.club_name}" ?`)) return;
+
+        try {
+            // 1. Créer le club
+            const { data: newClub, error: clubError } = await supabase
+                .from('clubs')
+                .insert([{
+                    name: req.club_name,
+                    description: req.club_description || req.bio,
+                    bio: req.bio,
+                    address: req.address,
+                    city: req.city,
+                    country: req.country,
+                    phone: req.phone,
+                    opening_hours: req.opening_hours,
+                    manager_id: req.user_id,
+                    contact_email: req.contact_email,
+                    latitude: 46.2276, 
+                    longitude: 2.2137,
+                    is_active: true
+                }])
+                .select()
+                .single();
+
+            if (clubError) throw clubError;
+
+            // 2. Insérer les photos
+            if (req.photo_urls && req.photo_urls.length > 0) {
+                const photoInserts = req.photo_urls.map(url => ({
+                    club_id: newClub.id,
+                    url: url
+                }));
+                const { error: photoError } = await supabase.from('club_photos').insert(photoInserts);
+                if (photoError) throw photoError;
+            }
+
+            // 3. Marquer la demande comme validée
+            await supabase.from('club_requests').update({ status: 'approved' }).eq('id', req.id);
+
+            alert(`Club "${req.club_name}" créé avec succès !`);
+            fetchAdminData();
+        } catch (err) {
+            alert("Erreur approbation : " + err.message);
+        }
+    };
+
+    const handleRejectClub = async (reqId) => {
+        if (!window.confirm("Refuser cette demande de club ?")) return;
+        try {
+            await supabase.from('club_requests').update({ status: 'rejected' }).eq('id', reqId);
+            fetchAdminData();
+        } catch (err) {
+            alert(err.message);
         }
     };
 
@@ -407,18 +472,24 @@ const Profil = ({ session }) => {
                                 </div>
                             </div>
 
-                            <div className="flex bg-sport-sand/30 p-1 rounded-2xl border border-sport-sand">
+                            <div className="flex bg-sport-sand/30 p-1 rounded-2xl border border-sport-sand overflow-x-auto scrollbar-hide">
                                 <button
                                     onClick={() => setAdminSubTab('reports')}
-                                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${adminSubTab === 'reports' ? 'bg-sport-navy text-white shadow-lg' : 'text-slate-400'}`}
+                                    className={`flex-1 min-w-[100px] py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${adminSubTab === 'reports' ? 'bg-sport-navy text-white shadow-lg' : 'text-slate-400'}`}
                                 >
                                     Rapports ({reports.length})
                                 </button>
                                 <button
                                     onClick={() => setAdminSubTab('messages')}
-                                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${adminSubTab === 'messages' ? 'bg-sport-navy text-white shadow-lg' : 'text-slate-400'}`}
+                                    className={`flex-1 min-w-[100px] py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${adminSubTab === 'messages' ? 'bg-sport-navy text-white shadow-lg' : 'text-slate-400'}`}
                                 >
                                     Tickets ({supportMessages.length})
+                                </button>
+                                <button
+                                    onClick={() => setAdminSubTab('clubs')}
+                                    className={`flex-1 min-w-[100px] py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${adminSubTab === 'clubs' ? 'bg-sport-navy text-white shadow-lg' : 'text-slate-400'}`}
+                                >
+                                    Clubs ({clubRequests.length})
                                 </button>
                             </div>
 
@@ -434,7 +505,7 @@ const Profil = ({ session }) => {
                                             <p className="text-xs text-slate-500 bg-sport-beige/50 p-4 rounded-2xl italic font-medium">"{r.reason || r.content || 'Pas de détail'}"</p>
                                         </div>
                                     )) : <p className="text-center text-slate-300 py-12 italic font-medium">Aucun rapport en attente.</p>
-                                ) : (
+                                ) : adminSubTab === 'messages' ? (
                                     supportMessages.length > 0 ? supportMessages.map(m => (
                                         <div
                                             key={m.id}
@@ -453,6 +524,57 @@ const Profil = ({ session }) => {
                                             <p className="text-xs text-slate-600 line-clamp-2 italic font-medium leading-relaxed">"{m.content}"</p>
                                         </div>
                                     )) : <p className="text-center text-slate-300 py-12 italic font-medium">Boîte de réception vide.</p>
+                                ) : (
+                                    /* ONGLET CLUBS */
+                                    clubRequests.length > 0 ? clubRequests.map(req => (
+                                        <div key={req.id} className="bg-white rounded-[2.5rem] border border-sport-sand shadow-sm overflow-hidden animate-in fade-in duration-500">
+                                            <div className="p-6 bg-sport-beige/20 border-b border-sport-sand">
+                                                <h4 className="text-lg font-black text-sport-navy uppercase tracking-tighter">{req.club_name}</h4>
+                                                <div className="flex items-center text-[10px] text-slate-400 font-bold uppercase mt-1">
+                                                    <MapPin size={12} className="mr-1 text-sport-green" />
+                                                    {req.city}, {req.country}
+                                                </div>
+                                            </div>
+                                            <div className="p-6 space-y-6">
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="flex items-center space-x-3 text-xs">
+                                                        <Phone size={14} className="text-sport-navy" />
+                                                        <span className="font-bold">{req.phone || 'Non renseigné'}</span>
+                                                    </div>
+                                                    <div className="flex items-center space-x-3 text-xs">
+                                                        <Clock size={14} className="text-sport-navy" />
+                                                        <span className="font-bold">{req.opening_hours?.weekdays || 'Non renseigné'}</span>
+                                                    </div>
+                                                </div>
+                                                <p className="text-xs text-slate-500 italic bg-white p-4 rounded-2xl border border-sport-sand">"{req.bio || 'Pas de bio'}"</p>
+                                                
+                                                {/* Photos de la demande */}
+                                                <div className="grid grid-cols-4 gap-2">
+                                                    {req.photo_urls?.map((url, i) => (
+                                                        <div key={i} className="aspect-square rounded-xl overflow-hidden border border-sport-sand shadow-inner bg-sport-beige">
+                                                            <img src={url} className="w-full h-full object-cover" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                <div className="flex space-x-3 pt-2">
+                                                    <button 
+                                                        onClick={() => handleApproveClub(req)}
+                                                        className="flex-1 py-4 bg-sport-green text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-sport-green/20 flex items-center justify-center space-x-2 active:scale-95 transition-all"
+                                                    >
+                                                        <Check size={16} />
+                                                        <span>Approuver</span>
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleRejectClub(req.id)}
+                                                        className="px-6 py-4 bg-white text-rose-500 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-rose-100 active:scale-95 transition-all"
+                                                    >
+                                                        <X size={16} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )) : <p className="text-center text-slate-300 py-12 italic font-medium">Aucune demande de club en attente.</p>
                                 )}
                             </div>
                         </>
