@@ -23,7 +23,6 @@ function MapController({ center }) {
 const Clubs = ({ session }) => {
     const navigate = useNavigate();
     const [clubs, setClubs] = useState([]);
-    const [selectedClub, setSelectedClub] = useState(null);
     const [showRequestForm, setShowRequestForm] = useState(false);
     const [showMyRequests, setShowMyRequests] = useState(false);
     const [myRequests, setMyRequests] = useState([]);
@@ -189,10 +188,7 @@ const Clubs = ({ session }) => {
     }
 
     function handleClubClick(club) {
-        setSelectedClub(club);
-        if (typeof club.latitude === 'number' && typeof club.longitude === 'number') {
-            setMapCenter([club.latitude, club.longitude]);
-        }
+        navigate(`/clubs/${club.id}`);
     }
 
     // Icone personnalisee (Vibe Sky)
@@ -495,40 +491,6 @@ const Clubs = ({ session }) => {
                 </div>
             )}
 
-            {/* Modal Détails Club (Optionnel pour voir l'impact du design) */}
-            {selectedClub && (
-                <div className="fixed inset-0 z-[3000] flex items-end justify-center p-4 pb-10" onClick={() => setSelectedClub(null)}>
-                    <div className="absolute inset-0 bg-sport-navy/60 backdrop-blur-sm"></div>
-                    <div className="relative w-full max-w-md bg-white rounded-[3rem] shadow-2xl p-10 animate-in slide-in-from-bottom duration-500 border-t border-sport-sky" onClick={e => e.stopPropagation()}>
-                        <div className="flex justify-between items-start mb-8">
-                            <div>
-                                <h2 className="text-3xl font-black text-sport-navy tracking-tighter leading-none">{selectedClub.name}</h2>
-                                <p className="text-[10px] text-sport-green font-bold uppercase tracking-[0.2em] mt-2">Club Officiel PicklePock</p>
-                            </div>
-                            <button onClick={() => setSelectedClub(null)} className="p-3 bg-sport-sky rounded-2xl text-slate-400"><X size={20} /></button>
-                        </div>
-                        <p className="text-sm text-slate-500 mb-8 italic leading-relaxed">{selectedClub.description || 'Pas de description.'}</p>
-                        
-                        <div className="grid grid-cols-2 gap-4 mb-8">
-                            <div className="bg-sport-sky/30 p-5 rounded-2xl border border-sport-sand">
-                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Localisation</p>
-                                <p className="text-xs font-bold text-sport-navy">{selectedClub.city}</p>
-                            </div>
-                            <div className="bg-sport-sky/30 p-5 rounded-2xl border border-sport-sand">
-                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Terrains</p>
-                                <p className="text-xs font-bold text-sport-navy">{selectedClub.courts_count || '?'}</p>
-                            </div>
-                        </div>
-
-                        <button 
-                            onClick={() => navigate(`/clubs/${selectedClub.id}`)}
-                            className="w-full py-5 bg-sport-navy text-white rounded-[2rem] font-black text-[10px] uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-all"
-                        >
-                            Voir la fiche complète
-                        </button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
