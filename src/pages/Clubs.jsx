@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { supabase } from '../lib/supabase';
@@ -20,6 +21,7 @@ function MapController({ center }) {
 }
 
 const Clubs = ({ session }) => {
+    const navigate = useNavigate();
     const [clubs, setClubs] = useState([]);
     const [selectedClub, setSelectedClub] = useState(null);
     const [showRequestForm, setShowRequestForm] = useState(false);
@@ -284,7 +286,7 @@ const Clubs = ({ session }) => {
                     {clubs.map(club => (
                         <div
                             key={club.id}
-                            onClick={() => handleClubClick(club)}
+                            onClick={() => navigate(`/clubs/${club.id}`)}
                             className="flex items-center p-5 bg-white border border-sport-sand rounded-[2rem] shadow-sm hover:border-sport-mint/30 transition-all cursor-pointer group"
                         >
                             <div className="w-14 h-14 rounded-2xl bg-sport-navy flex items-center justify-center text-white mr-5 overflow-hidden shadow-inner group-hover:scale-105 transition-transform">
@@ -518,7 +520,12 @@ const Clubs = ({ session }) => {
                             </div>
                         </div>
 
-                        <button className="w-full py-5 bg-sport-navy text-white rounded-[2rem] font-black text-[10px] uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-all">Voir la fiche complète</button>
+                        <button 
+                            onClick={() => navigate(`/clubs/${selectedClub.id}`)}
+                            className="w-full py-5 bg-sport-navy text-white rounded-[2rem] font-black text-[10px] uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-all"
+                        >
+                            Voir la fiche complète
+                        </button>
                     </div>
                 </div>
             )}

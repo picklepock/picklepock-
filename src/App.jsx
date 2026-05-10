@@ -10,6 +10,7 @@ import Clubs from './pages/Clubs';
 import Login from './pages/Login';
 import UpdatePassword from './pages/UpdatePassword';
 import Help from './pages/Help';
+import ClubDetail from './pages/ClubDetail';
 
 function App() {
     const [session, setSession] = useState(null);
@@ -68,6 +69,7 @@ function App() {
                         <Route path="/login" element={<Login />} />
                         <Route path="/update-password" element={<UpdatePassword />} />
                         <Route path="/help" element={<Help session={session} />} />
+                        <Route path="/clubs/:id" element={<ClubDetail session={session} />} />
                         <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                 </main>

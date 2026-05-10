@@ -26,6 +26,7 @@ const Profil = ({ session }) => {
     const [selectedMessage, setSelectedMessage] = useState(null);
     const [replies, setReplies] = useState([]);
     const [replyText, setReplyText] = useState('');
+    const [managedClubs, setManagedClubs] = useState([]);
 
     useEffect(() => {
         if (session) {
@@ -71,12 +72,25 @@ const Profil = ({ session }) => {
                     if (data.role === 'admin') {
                         fetchAdminData();
                     }
+                    fetchManagedClubs(user.id);
                 }
             }
         } catch (err) {
             console.error('Error:', err.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchManagedClubs = async (userId) => {
+        try {
+            const { data } = await supabase
+                .from('clubs')
+                .select('*')
+                .eq('manager_id', userId);
+            if (data) setManagedClubs(data);
+        } catch (err) {
+            console.error("Erreur managed clubs:", err);
         }
     };
 
@@ -142,6 +156,13 @@ const Profil = ({ session }) => {
                 const { error: photoError } = await supabase.from('club_photos').insert(photoInserts);
                 if (photoError) throw photoError;
             }
+
+            // 2.5 Ajouter le manager comme membre/manager du club
+            await supabase.from('club_members').insert([{
+                user_id: req.user_id,
+                club_id: newClub.id,
+                role: 'manager'
+            }]);
 
             // 3. Marquer la demande comme validée
             await supabase.from('club_requests').update({ status: 'approved' }).eq('id', req.id);
@@ -646,6 +667,11 @@ const Profil = ({ session }) => {
                                     <ShieldAlert size={12} className="mr-2" /> Admin
                                 </span>
                             )}
+                            {managedClubs.length > 0 && (
+                                <span className="px-5 py-2 bg-amber-500 text-white text-[10px] font-bold rounded-xl uppercase tracking-widest flex items-center shadow-lg shadow-amber-500/20">
+                                    <ShieldCheck size={12} className="mr-2" /> Gérant Club
+                                </span>
+                            )}
                         </div>
                         {profile?.bio && <p className="mt-8 text-center text-slate-500 text-sm italic px-10 leading-relaxed max-w-md opacity-80 font-medium">"{profile.bio}"</p>}
                     </div>
@@ -710,6 +736,33 @@ const Profil = ({ session }) => {
                                     →
                                 </div>
                             </div>
+                            
+                            {/* CLUBS GÉRÉS */}
+                            {managedClubs.length > 0 && (
+                                <div className="col-span-2 space-y-4">
+                                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mt-4">Clubs que vous gérez</h3>
+                                    {managedClubs.map(club => (
+                                        <div 
+                                            key={club.id}
+                                            onClick={() => window.location.href = `/clubs/${club.id}`}
+                                            className="bg-white p-6 rounded-[2.5rem] border border-sport-sand shadow-sm flex items-center justify-between group cursor-pointer hover:border-amber-400 transition-all"
+                                        >
+                                            <div className="flex items-center space-x-4">
+                                                <div className="w-12 h-12 bg-sport-navy rounded-2xl flex items-center justify-center text-white overflow-hidden shadow-inner">
+                                                    {club.logo_url ? <img src={club.logo_url} className="w-full h-full object-cover" /> : "🎾"}
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-sport-navy text-sm uppercase">{club.name}</p>
+                                                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">{club.city}</p>
+                                                </div>
+                                            </div>
+                                            <div className="px-4 py-2 bg-amber-50 text-amber-600 rounded-xl text-[9px] font-black uppercase tracking-widest border border-amber-100 group-hover:bg-amber-500 group-hover:text-white transition-all">
+                                                Gérer
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </>
