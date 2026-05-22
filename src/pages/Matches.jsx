@@ -176,7 +176,7 @@ const Matches = ({ session }) => {
                 .from('matches')
                 .select(`
                     *,
-                    creator:profiles(username, avatar_url),
+                    creator:profiles!matches_creator_id_fkey(username, avatar_url),
                     participants:match_participants(
                         status,
                         team,

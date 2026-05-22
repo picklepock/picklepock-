@@ -140,7 +140,7 @@ const Profil = ({ session }) => {
                     team,
                     match:matches(
                         *,
-                        creator:profiles(id, username, avatar_url),
+                        creator:profiles!matches_creator_id_fkey(id, username, avatar_url),
                         participants:match_participants(
                             user_id,
                             status,
