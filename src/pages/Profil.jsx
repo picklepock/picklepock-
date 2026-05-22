@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { LogOut, Settings, UserCircle, Edit3, X, Check, Camera, ShieldAlert, HelpCircle, ArrowLeft, Send, MapPin, Phone, Clock, Image as ImageIcon, Trash2, ShieldCheck } from 'lucide-react';
+import { LogOut, Settings, UserCircle, Edit3, X, Check, Camera, ShieldAlert, HelpCircle, ArrowLeft, Send, MapPin, Phone, Clock, Image as ImageIcon, Trash2, ShieldCheck, MessageSquare, Calendar, Users, Award, AlertTriangle, ChevronRight, Trophy } from 'lucide-react';
 import Login from './Login';
 
 const Profil = ({ session }) => {
@@ -28,13 +28,59 @@ const Profil = ({ session }) => {
     const [replyText, setReplyText] = useState('');
     const [managedClubs, setManagedClubs] = useState([]);
 
+    // États pour le matchmaking & saisie de score
+    const [userMatches, setUserMatches] = useState([]);
+    const [fetchingMatches, setFetchingMatches] = useState(false);
+    const [activeMatchTab, setActiveMatchTab] = useState('venir');
+    const [selectedMatchForScore, setSelectedMatchForScore] = useState(null);
+    const [reportingScore, setReportingScore] = useState(false);
+    const [scoreForm, setScoreForm] = useState({
+        scoreA: '',
+        scoreB: '',
+        teamAPlayers: [],
+        teamBPlayers: []
+    });
+    const [selectedMatchChat, setSelectedMatchChat] = useState(null);
+
     useEffect(() => {
-        if (session) {
-            fetchProfile();
-        } else {
+        if (!session?.user?.id) {
             setLoading(false);
+            return;
         }
-    }, [session]);
+
+        fetchProfile();
+
+        // Abonnement temps réel pour les changements de participation ou de matchs
+        const channel = supabase
+            .channel(`user_matches_changes:${session.user.id}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'match_participants',
+                filter: `user_id=eq.${session.user.id}`
+            }, () => {
+                fetchUserMatches(session.user.id);
+            })
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'matches'
+            }, () => {
+                fetchUserMatches(session.user.id);
+                // Rafraîchir aussi le profil si ses stats changent
+                supabase.from('profiles').select('*').eq('id', session.user.id).single().then(({ data }) => {
+                    if (data) {
+                        setProfile(data);
+                        setEditForm(data);
+                    }
+                });
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [session?.user?.id]);
 
     const fetchProfile = async () => {
         try {
@@ -73,6 +119,7 @@ const Profil = ({ session }) => {
                         fetchAdminData();
                     }
                     fetchManagedClubs(user.id);
+                    fetchUserMatches(user.id);
                 }
             }
         } catch (err) {
@@ -80,6 +127,375 @@ const Profil = ({ session }) => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const fetchUserMatches = async (userId) => {
+        setFetchingMatches(true);
+        try {
+            const { data, error } = await supabase
+                .from('match_participants')
+                .select(`
+                    match_id,
+                    status,
+                    team,
+                    match:matches(
+                        *,
+                        creator:profiles(id, username, avatar_url),
+                        participants:match_participants(
+                            user_id,
+                            status,
+                            team,
+                            user:profiles(id, username, avatar_url)
+                        )
+                    )
+                `)
+                .eq('user_id', userId)
+                .eq('status', 'confirmed');
+            
+            if (error) throw error;
+            if (data) {
+                const matches = data.map(item => item.match).filter(Boolean);
+                setUserMatches(matches);
+            }
+        } catch (err) {
+            console.error("Erreur chargement matchs utilisateur:", err.message);
+        } finally {
+            setFetchingMatches(false);
+        }
+    };
+
+    const handleValidateScore = async (matchId) => {
+        if (!window.confirm("Voulez-vous vraiment valider ce score ? Les points seront attribués et le match sera clôturé.")) return;
+        try {
+            const { error } = await supabase.rpc('validate_match_score', {
+                match_uuid: matchId,
+                validator_uuid: session.user.id
+            });
+            if (error) throw error;
+            alert("Score validé, vos points ont été mis à jour ! 🏆");
+            fetchProfile();
+        } catch (err) {
+            alert("Erreur lors de la validation : " + err.message);
+        }
+    };
+
+    const handleRejectScore = async (matchId) => {
+        const comment = window.prompt("Indiquez la raison de la contestation (optionnel) :");
+        if (comment === null) return;
+        try {
+            const { error } = await supabase.rpc('reject_match_score', {
+                match_uuid: matchId,
+                rejecter_uuid: session.user.id
+            });
+            if (error) throw error;
+            
+            if (comment.trim()) {
+                await supabase.from('match_messages').insert([{
+                    match_id: matchId,
+                    user_id: session.user.id,
+                    content: `⚠️ Score contesté : "${comment.trim()}"`
+                }]);
+            }
+            
+            alert("Score contesté. L'organisateur a été notifié.");
+            fetchProfile();
+        } catch (err) {
+            alert("Erreur lors de la contestation : " + err.message);
+        }
+    };
+
+    const isPastMatch = (match) => {
+        if (!match.date) return false;
+        const matchDateTime = new Date(`${match.date}T${match.time || '00:00:00'}`);
+        return matchDateTime < new Date();
+    };
+
+    const getMatchOutcome = (match, userId) => {
+        const userPart = match.participants.find(p => p.user_id === userId);
+        if (!userPart || !userPart.team) return 'draw';
+        
+        const scoreA = match.score_team_a || 0;
+        const scoreB = match.score_team_b || 0;
+        
+        if (scoreA === scoreB) return 'draw';
+        
+        if (userPart.team === 'A') {
+            return scoreA > scoreB ? 'win' : 'loss';
+        } else if (userPart.team === 'B') {
+            return scoreB > scoreA ? 'win' : 'loss';
+        }
+        
+        return 'draw';
+    };
+
+    const handleOpenScoreModal = (match) => {
+        setSelectedMatchForScore(match);
+        
+        if (match.type === 'Simple') {
+            const creatorId = match.creator_id;
+            const opponent = match.participants.find(p => p.user_id !== creatorId && p.status === 'confirmed');
+            const opponentId = opponent ? opponent.user_id : null;
+            
+            setScoreForm({
+                scoreA: '',
+                scoreB: '',
+                teamAPlayers: [creatorId],
+                teamBPlayers: opponentId ? [opponentId] : []
+            });
+        } else {
+            const creatorId = match.creator_id;
+            setScoreForm({
+                scoreA: '',
+                scoreB: '',
+                teamAPlayers: [creatorId],
+                teamBPlayers: []
+            });
+        }
+    };
+
+    const handleSubmitScore = async (e) => {
+        e.preventDefault();
+        if (!selectedMatchForScore) return;
+        
+        const { scoreA, scoreB, teamAPlayers, teamBPlayers } = scoreForm;
+        
+        if (scoreA === '' || scoreB === '') {
+            alert("Veuillez saisir les scores des deux équipes.");
+            return;
+        }
+        
+        const sA = parseInt(scoreA, 10);
+        const sB = parseInt(scoreB, 10);
+        if (isNaN(sA) || isNaN(sB) || sA < 0 || sB < 0) {
+            alert("Les scores doivent être des nombres positifs.");
+            return;
+        }
+        
+        const limit = selectedMatchForScore.type === 'Simple' ? 2 : 4;
+        const confirmedParticipants = selectedMatchForScore.participants.filter(p => p.status === 'confirmed');
+        
+        if (confirmedParticipants.length < limit) {
+            alert(`Le match n'est pas complet (requis : ${limit} joueurs). Vous ne pouvez pas saisir le score.`);
+            return;
+        }
+        
+        if (selectedMatchForScore.type === 'Simple') {
+            if (teamAPlayers.length !== 1 || teamBPlayers.length !== 1) {
+                alert("Erreur dans la configuration des équipes.");
+                return;
+            }
+        } else {
+            if (teamAPlayers.length !== 2 || teamBPlayers.length !== 2) {
+                alert("Pour un match de Double, chaque équipe doit avoir exactement 2 joueurs.");
+                return;
+            }
+        }
+        
+        setReportingScore(true);
+        try {
+            const { error } = await supabase.rpc('report_match_score', {
+                match_uuid: selectedMatchForScore.id,
+                reporter_uuid: session.user.id,
+                score_a: sA,
+                score_b: sB,
+                team_a_players: teamAPlayers,
+                team_b_players: teamBPlayers
+            });
+            
+            if (error) throw error;
+            
+            alert("Score enregistré avec succès ! L'adversaire a été notifié pour validation.");
+            setSelectedMatchForScore(null);
+            fetchProfile();
+        } catch (err) {
+            alert("Erreur lors de l'enregistrement du score : " + err.message);
+        } finally {
+            setReportingScore(false);
+        }
+    };
+
+    const renderEmptyState = (title, description) => (
+        <div className="text-center py-10 px-6 border-2 border-dashed border-sport-sand rounded-[2rem] bg-sport-beige/10">
+            <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">{title}</p>
+            <p className="text-[11px] text-slate-400 italic leading-relaxed">{description}</p>
+        </div>
+    );
+
+    const renderPastMatchOutcome = (match) => {
+        const outcome = getMatchOutcome(match, session.user.id);
+        const userPart = match.participants.find(p => p.user_id === session.user.id);
+        const myScore = userPart?.team === 'A' ? match.score_team_a : match.score_team_b;
+        const oppScore = userPart?.team === 'A' ? match.score_team_b : match.score_team_a;
+        
+        if (outcome === 'win') {
+            return (
+                <div className="flex items-center space-x-2">
+                    <span className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">🏆</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">
+                        Victoire {myScore} - {oppScore}
+                    </span>
+                </div>
+            );
+        } else if (outcome === 'loss') {
+            return (
+                <div className="flex items-center space-x-2">
+                    <span className="w-5 h-5 rounded-full bg-slate-300 text-slate-600 flex items-center justify-center text-[10px]">📉</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        Défaite {myScore} - {oppScore}
+                    </span>
+                </div>
+            );
+        } else {
+            return (
+                <div className="flex items-center space-x-2">
+                    <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-[10px]">🤝</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        Égalité {myScore} - {oppScore}
+                    </span>
+                </div>
+            );
+        }
+    };
+
+    const renderMatchCard = (match, category) => {
+        const isCreator = match.creator_id === session.user.id;
+        const confirmedParts = match.participants.filter(p => p.status === 'confirmed');
+        const limit = match.type === 'Simple' ? 2 : 4;
+        
+        return (
+            <div key={match.id} className="bg-white p-5 rounded-[2rem] border border-sport-sand shadow-sm hover:border-sport-green/20 transition-all space-y-4">
+                <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                        <div className="flex items-center space-x-2 text-[10px] font-bold text-slate-400">
+                            <Calendar size={12} className="text-sport-green" />
+                            <span>{new Date(match.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                            <span>•</span>
+                            <Clock size={12} className="text-sport-green" />
+                            <span>{match.time.slice(0, 5)}</span>
+                        </div>
+                        <p className="text-xs font-bold text-sport-navy flex items-center space-x-1">
+                            <MapPin size={12} className="text-slate-300" />
+                            <span className="truncate max-w-[180px]">{match.location}</span>
+                        </p>
+                    </div>
+                    <span className={`px-2.5 py-1 text-[8px] font-black uppercase tracking-widest rounded-lg border ${
+                        match.type === 'Simple' 
+                            ? 'bg-sport-sky/10 text-sport-sky border-sport-sky/20' 
+                            : 'bg-sport-green/10 text-sport-green border-sport-green/20'
+                    }`}>
+                        {match.type}
+                    </span>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-b border-sport-sand/40 py-3">
+                    <div className="flex items-center space-x-1.5">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-1">Joueurs :</span>
+                        <div className="flex -space-x-2.5 overflow-hidden">
+                            {confirmedParts.map(p => (
+                                <div key={p.user_id} className="w-6 h-6 rounded-full border border-white overflow-hidden bg-white shadow-sm" title={p.user?.username}>
+                                    <img 
+                                        src={p.user?.avatar_url || `https://avatar.vercel.sh/${p.user?.username}`} 
+                                        className="w-full h-full object-cover" 
+                                        alt={p.user?.username}
+                                    />
+                                </div>
+                            ))}
+                            {Array.from({ length: limit - confirmedParts.length }).map((_, i) => (
+                                <div key={i} className="w-6 h-6 rounded-full border border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-[8px] text-slate-400 font-bold" title="Slot libre">
+                                    +
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <span className="text-[9px] font-bold text-slate-400">
+                        {confirmedParts.length}/{limit} places
+                    </span>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                    {category === 'venir' && (
+                        <>
+                            <button
+                                onClick={() => setSelectedMatchChat(match)}
+                                className="flex items-center space-x-1.5 px-4 py-2 bg-sport-navy text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md hover:bg-sport-green transition-colors"
+                            >
+                                <MessageSquare size={12} />
+                                <span>Chat</span>
+                            </button>
+                            <span className="text-[9px] font-bold text-sport-green bg-sport-green/5 px-2.5 py-1 rounded-lg border border-sport-green/10">
+                                Match à venir
+                            </span>
+                        </>
+                    )}
+
+                    {category === 'saisir' && (
+                        <>
+                            <button
+                                onClick={() => setSelectedMatchChat(match)}
+                                className="p-2 bg-sport-beige text-sport-navy rounded-xl hover:bg-sport-sand transition-colors"
+                                title="Chat du match"
+                            >
+                                <MessageSquare size={14} />
+                            </button>
+                            <button
+                                onClick={() => handleOpenScoreModal(match)}
+                                className="flex items-center space-x-1.5 px-5 py-2.5 bg-sport-green text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-sport-green/20 hover:scale-102 active:scale-98 transition-all"
+                            >
+                                <Trophy size={12} />
+                                <span>Saisir score</span>
+                            </button>
+                        </>
+                    )}
+
+                    {category === 'valider' && (
+                        <div className="w-full space-y-3">
+                            <div className="flex justify-between items-center text-xs font-bold text-sport-navy p-3 bg-sport-beige/35 rounded-xl border border-sport-sand">
+                                <span>Score proposé :</span>
+                                <span className="font-black text-sport-green bg-white px-2 py-0.5 rounded-lg border shadow-sm text-sm">
+                                    {match.score_team_a} - {match.score_team_b}
+                                </span>
+                            </div>
+                            
+                            {match.score_reporter_id === session.user.id ? (
+                                <div className="text-center py-2 bg-amber-50 rounded-xl border border-amber-100 text-[9px] font-bold text-amber-700 uppercase tracking-widest">
+                                    ⏳ En attente de validation
+                                </div>
+                            ) : (
+                                <div className="flex space-x-2">
+                                    <button
+                                        onClick={() => handleValidateScore(match.id)}
+                                        className="flex-1 py-2.5 bg-sport-green text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md flex items-center justify-center space-x-1 active:scale-95 transition-all"
+                                    >
+                                        <Check size={12} />
+                                        <span>Valider</span>
+                                    </button>
+                                    <button
+                                        onClick={() => handleRejectScore(match.id)}
+                                        className="py-2.5 px-4 bg-white text-rose-500 rounded-xl text-[9px] font-black uppercase tracking-widest border border-rose-100 flex items-center justify-center active:scale-95 transition-all"
+                                        title="Contester le score"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {category === 'passes' && (
+                        <div className="w-full flex justify-between items-center">
+                            {renderPastMatchOutcome(match)}
+                            <button
+                                onClick={() => setSelectedMatchChat(match)}
+                                className="p-2 bg-sport-beige text-slate-400 rounded-xl hover:text-sport-navy hover:bg-sport-sand transition-colors"
+                                title="Voir le chat"
+                            >
+                                <MessageSquare size={14} />
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
     };
 
     const fetchManagedClubs = async (userId) => {
@@ -333,6 +749,11 @@ const Profil = ({ session }) => {
     };
 
     const handleLogout = async () => await supabase.auth.signOut();
+
+    const upcomingMatches = userMatches.filter(m => !isPastMatch(m) && (!m.score_status || m.score_status === 'rejected'));
+    const toReportMatches = userMatches.filter(m => isPastMatch(m) && (!m.score_status || m.score_status === 'rejected'));
+    const toValidateMatches = userMatches.filter(m => m.score_status === 'pending');
+    const pastMatches = userMatches.filter(m => m.score_status === 'validated');
 
     if (loading && !isEditing) return <div className="flex items-center justify-center min-h-[60vh]"><div className="w-6 h-6 border-2 border-sport-green border-t-transparent rounded-full animate-spin"></div></div>;
     if (!session) return <div className="p-4 flex flex-col items-center justify-center min-h-[70vh]"><div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-6"><UserCircle size={48} /></div><h2 className="text-xl font-bold text-gray-900 mb-2">Compte non connecté</h2><Login /></div>;
@@ -700,6 +1121,93 @@ const Profil = ({ session }) => {
                             </div>
                         </div>
 
+                        {/* MES MATCHS CIRCUIT */}
+                        <div className="bg-white p-8 rounded-[3rem] border border-sport-sand shadow-sm space-y-6">
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-lg font-black uppercase tracking-tight text-sport-navy flex items-center space-x-2">
+                                    <Trophy size={20} className="text-sport-green animate-pulse" />
+                                    <span>Mes Matchs Circuit</span>
+                                </h3>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-sport-beige px-3 py-1 rounded-lg">
+                                    Bêta 2026
+                                </span>
+                            </div>
+
+                            {/* Navigation des Onglets */}
+                            <div className="flex bg-sport-sand/35 p-1 rounded-2xl border border-sport-sand overflow-x-auto scrollbar-hide">
+                                {[
+                                    { id: 'venir', label: 'À venir', count: upcomingMatches.length },
+                                    { id: 'saisir', label: 'À saisir', count: toReportMatches.length },
+                                    { id: 'valider', label: 'À valider', count: toValidateMatches.length },
+                                    { id: 'passes', label: 'Passés', count: pastMatches.length }
+                                ].map(tab => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveMatchTab(tab.id)}
+                                        className={`flex-1 min-w-[75px] py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all relative ${
+                                            activeMatchTab === tab.id 
+                                                ? 'bg-sport-navy text-white shadow-md' 
+                                                : 'text-slate-400 hover:text-sport-navy'
+                                        }`}
+                                    >
+                                        <span className="block truncate">{tab.label}</span>
+                                        {tab.count > 0 && (
+                                            <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full text-[8px] font-black flex items-center justify-center border shadow-sm ${
+                                                activeMatchTab === tab.id 
+                                                    ? 'bg-sport-green text-white border-sport-navy' 
+                                                    : 'bg-sport-navy text-white border-white'
+                                            }`}>
+                                                {tab.count}
+                                            </span>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Liste des Matchs */}
+                            <div className="space-y-4">
+                                {fetchingMatches ? (
+                                    <div className="flex justify-center py-8">
+                                        <div className="w-5 h-5 border-2 border-sport-green border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {activeMatchTab === 'venir' && (
+                                            upcomingMatches.length > 0 ? (
+                                                upcomingMatches.map(m => renderMatchCard(m, 'venir'))
+                                            ) : (
+                                                renderEmptyState("Aucun match à venir.", "Inscrivez-vous à des matchs sur la page Matches pour commencer à grimper au classement !")
+                                            )
+                                        )}
+
+                                        {activeMatchTab === 'saisir' && (
+                                            toReportMatches.length > 0 ? (
+                                                toReportMatches.map(m => renderMatchCard(m, 'saisir'))
+                                            ) : (
+                                                renderEmptyState("Aucun score à saisir.", "Vos matchs passés n'attendent aucune saisie de score.")
+                                            )
+                                        )}
+
+                                        {activeMatchTab === 'valider' && (
+                                            toValidateMatches.length > 0 ? (
+                                                toValidateMatches.map(m => renderMatchCard(m, 'valider'))
+                                            ) : (
+                                                renderEmptyState("Aucun score à valider.", "Aucun match n'est en attente de validation.")
+                                            )
+                                        )}
+
+                                        {activeMatchTab === 'passes' && (
+                                            pastMatches.length > 0 ? (
+                                                pastMatches.map(m => renderMatchCard(m, 'passes'))
+                                            ) : (
+                                                renderEmptyState("Aucun match passé.", "Terminez et validez des matchs pour voir l'historique de vos victoires.")
+                                            )
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
                         {/* INFOS COMPLEMENTAIRES */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="p-8 bg-white border border-sport-sand rounded-[2rem] shadow-sm flex flex-col space-y-4">
@@ -767,6 +1275,311 @@ const Profil = ({ session }) => {
                     </div>
                 </>
             )}
+
+            {/* MODAL DE SAISIE DE SCORE */}
+            {selectedMatchForScore && (
+                <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-4 bg-sport-navy/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="w-full max-w-md bg-white rounded-[3rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-500 border border-white/20">
+                        {/* Header */}
+                        <div className="p-6 bg-sport-navy text-white flex justify-between items-center shrink-0">
+                            <div>
+                                <h3 className="font-bold text-sm tracking-tight flex items-center space-x-2">
+                                    <Trophy size={16} className="text-sport-green" />
+                                    <span>Saisir le score du match</span>
+                                </h3>
+                                <p className="text-[10px] text-white/50 uppercase tracking-widest mt-0.5 font-bold">📍 {selectedMatchForScore.location}</p>
+                            </div>
+                            <button 
+                                onClick={() => setSelectedMatchForScore(null)} 
+                                className="p-2.5 bg-white/10 hover:bg-white/20 active:scale-95 transition-all rounded-2xl text-white"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        {/* Form Body */}
+                        <form onSubmit={handleSubmitScore} className="p-6 space-y-6">
+                            {selectedMatchForScore.type === 'Double' ? (
+                                <div className="space-y-4">
+                                    <div className="p-4 bg-sport-beige/30 rounded-2xl border border-sport-sand">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Composition des équipes (Double)</p>
+                                        <p className="text-[10px] text-slate-500 italic mb-4 leading-relaxed">
+                                            Assignez chaque joueur à son équipe. Chaque équipe doit compter exactement 2 joueurs.
+                                        </p>
+                                        
+                                        <div className="space-y-3">
+                                            {selectedMatchForScore.participants
+                                                .filter(p => p.status === 'confirmed')
+                                                .map(p => {
+                                                    const inA = scoreForm.teamAPlayers.includes(p.user_id);
+                                                    const inB = scoreForm.teamBPlayers.includes(p.user_id);
+                                                    
+                                                    return (
+                                                        <div key={p.user_id} className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-sport-sand shadow-sm">
+                                                            <div className="flex items-center space-x-2.5">
+                                                                <div className="w-8 h-8 rounded-full border border-sport-sand overflow-hidden shrink-0">
+                                                                    <img 
+                                                                        src={p.user?.avatar_url || `https://avatar.vercel.sh/${p.user?.username}`} 
+                                                                        className="w-full h-full object-cover" 
+                                                                        alt={p.user?.username}
+                                                                    />
+                                                                </div>
+                                                                <span className="text-xs font-bold text-sport-navy truncate max-w-[130px]">
+                                                                    {p.user?.username || 'Joueur'}
+                                                                </span>
+                                                            </div>
+                                                            
+                                                            <div className="flex bg-sport-beige/50 p-0.5 rounded-lg border border-sport-sand">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        let newA = scoreForm.teamAPlayers.filter(id => id !== p.user_id);
+                                                                        let newB = scoreForm.teamBPlayers.filter(id => id !== p.user_id);
+                                                                        newA.push(p.user_id);
+                                                                        setScoreForm({ ...scoreForm, teamAPlayers: newA, teamBPlayers: newB });
+                                                                    }}
+                                                                    className={`px-3 py-1 rounded-md text-[9px] font-black uppercase tracking-wider transition-all ${
+                                                                        inA 
+                                                                            ? 'bg-sport-green text-white shadow-sm' 
+                                                                            : 'text-slate-400 hover:text-sport-navy'
+                                                                    }`}
+                                                                >
+                                                                    Équipe A
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        let newA = scoreForm.teamAPlayers.filter(id => id !== p.user_id);
+                                                                        let newB = scoreForm.teamBPlayers.filter(id => id !== p.user_id);
+                                                                        newB.push(p.user_id);
+                                                                        setScoreForm({ ...scoreForm, teamAPlayers: newA, teamBPlayers: newB });
+                                                                    }}
+                                                                    className={`px-3 py-1 rounded-md text-[9px] font-black uppercase tracking-wider transition-all ${
+                                                                        inB 
+                                                                            ? 'bg-sport-sky text-sport-navy shadow-sm' 
+                                                                            : 'text-slate-400 hover:text-sport-navy'
+                                                                    }`}
+                                                                >
+                                                                    Équipe B
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                        </div>
+                                        
+                                        <div className="flex justify-between items-center mt-4 text-[9px] font-bold">
+                                            <span className={scoreForm.teamAPlayers.length === 2 ? 'text-sport-green' : 'text-rose-500'}>
+                                                Équipe A : {scoreForm.teamAPlayers.length}/2
+                                            </span>
+                                            <span className={scoreForm.teamBPlayers.length === 2 ? 'text-sport-sky' : 'text-rose-500'}>
+                                                Équipe B : {scoreForm.teamBPlayers.length}/2
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="p-4 bg-sport-beige/30 rounded-2xl border border-sport-sand text-center">
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-2">Match Simple (Singles)</p>
+                                    <p className="text-xs font-bold text-sport-navy">
+                                        {selectedMatchForScore.creator?.username || 'Équipe A'} vs {selectedMatchForScore.participants.find(p => p.user_id !== selectedMatchForScore.creator_id)?.user?.username || 'Équipe B'}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Inputs de Scores */}
+                            <div className="grid grid-cols-2 gap-6 bg-sport-beige/10 p-6 rounded-[2.5rem] border border-sport-sand">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center block">Score Équipe A</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        placeholder="0"
+                                        value={scoreForm.scoreA}
+                                        onChange={e => setScoreForm({ ...scoreForm, scoreA: e.target.value })}
+                                        className="w-full text-center py-4 bg-white border border-sport-sand rounded-2xl text-2xl font-black text-sport-navy focus:outline-none focus:border-sport-green focus:ring-4 focus:ring-sport-green/5 shadow-inner"
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center block">Score Équipe B</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        placeholder="0"
+                                        value={scoreForm.scoreB}
+                                        onChange={e => setScoreForm({ ...scoreForm, scoreB: e.target.value })}
+                                        className="w-full text-center py-4 bg-white border border-sport-sand rounded-2xl text-2xl font-black text-sport-navy focus:outline-none focus:border-sport-green focus:ring-4 focus:ring-sport-green/5 shadow-inner"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Submit Button */}
+                            <button
+                                type="submit"
+                                disabled={reportingScore}
+                                className="w-full py-5 bg-sport-green text-white rounded-[2rem] font-bold text-xs uppercase tracking-[0.2em] flex items-center justify-center space-x-3 shadow-2xl shadow-sport-green/20 hover:scale-102 active:scale-98 disabled:opacity-50 transition-all"
+                            >
+                                {reportingScore ? (
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                    <>
+                                        <Check size={18} />
+                                        <span>Soumettre le score</span>
+                                    </>
+                                )}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* CHAT DU MATCH */}
+            {selectedMatchChat && (
+                <MatchChatModal
+                    match={selectedMatchChat}
+                    onClose={() => setSelectedMatchChat(null)}
+                    session={session}
+                />
+            )}
+        </div>
+    );
+};
+
+// ==========================================
+// COMPOSANT CHAT DE MATCH EN TEMPS RÉEL
+// ==========================================
+const MatchChatModal = ({ match, onClose, session }) => {
+    const [messages, setMessages] = useState([]);
+    const [newMessage, setNewMessage] = useState('');
+    const [loading, setLoading] = useState(false);
+    const messagesEndRef = useRef(null);
+
+    const fetchMessages = async () => {
+        const { data, error } = await supabase
+            .from('match_messages')
+            .select('*, user:profiles(username, avatar_url)')
+            .eq('match_id', match.id)
+            .order('created_at', { ascending: true });
+        if (data) setMessages(data);
+    };
+
+    useEffect(() => {
+        fetchMessages();
+
+        const channel = supabase
+            .channel(`match_messages:${match.id}`)
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'match_messages',
+                filter: `match_id=eq.${match.id}`
+            }, () => {
+                fetchMessages();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [match.id]);
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+
+    const handleSendMessage = async (e) => {
+        e.preventDefault();
+        if (!newMessage.trim() || !session) return;
+
+        setLoading(true);
+        try {
+            const { error } = await supabase
+                .from('match_messages')
+                .insert([{
+                    match_id: match.id,
+                    user_id: session.user.id,
+                    content: newMessage.trim()
+                }]);
+            if (error) throw error;
+            setNewMessage('');
+            fetchMessages();
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-4 bg-sport-navy/60 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="w-full max-w-md bg-sport-beige rounded-[3rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-500 border border-white/20 flex flex-col h-[550px]">
+                {/* Header */}
+                <div className="p-6 bg-sport-navy text-white flex justify-between items-center border-b border-white/10 shrink-0">
+                    <div>
+                        <h3 className="font-bold text-sm tracking-tight flex items-center space-x-2">
+                            <MessageSquare size={16} className="text-sport-green animate-pulse" />
+                            <span>Chat du Match</span>
+                        </h3>
+                        <p className="text-[10px] text-white/50 uppercase tracking-widest mt-0.5 font-bold">📍 {match.location}</p>
+                    </div>
+                    <button onClick={onClose} className="p-2.5 bg-white/10 hover:bg-white/20 active:scale-95 transition-all rounded-2xl text-white">
+                        <X size={18} />
+                    </button>
+                </div>
+
+                {/* Messages Body */}
+                <div className="flex-grow overflow-y-auto p-6 space-y-4 bg-white/40 shadow-inner">
+                    {messages.length > 0 ? (
+                        messages.map((msg) => {
+                            const isMe = msg.user_id === session?.user?.id;
+                            return (
+                                <div key={msg.id} className={`flex items-start space-x-2.5 ${isMe ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                                    <div className="w-8 h-8 rounded-full border border-sport-sand overflow-hidden shrink-0 bg-white shadow-sm">
+                                        <img 
+                                            src={msg.user?.avatar_url || `https://avatar.vercel.sh/${msg.user?.username}`} 
+                                            className="w-full h-full object-cover" 
+                                            alt={msg.user?.username}
+                                        />
+                                    </div>
+                                    <div className={`p-3.5 rounded-2xl text-xs max-w-[75%] font-medium leading-relaxed shadow-sm ${
+                                        isMe 
+                                            ? 'bg-sport-navy text-white rounded-tr-none' 
+                                            : 'bg-white text-sport-navy rounded-tl-none border border-sport-sand'
+                                    }`}>
+                                        {!isMe && <p className="text-[9px] font-black text-sport-green uppercase tracking-wider mb-1">{msg.user?.username || 'Joueur'}</p>}
+                                        <p>{msg.content}</p>
+                                        <span className={`text-[8px] block text-right mt-1.5 ${isMe ? 'text-white/50' : 'text-slate-400'}`}>
+                                            {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    ) : (
+                        <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 opacity-60">
+                            <span className="text-3xl">💬</span>
+                            <p className="text-xs font-bold text-sport-navy uppercase tracking-widest">Aucun message</p>
+                            <p className="text-[11px] text-slate-500 italic">Discutez ici pour organiser le match (rdv, couleur de t-shirt, etc.) !</p>
+                        </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input Area */}
+                <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-sport-sand flex space-x-3 shrink-0">
+                    <input
+                        value={newMessage}
+                        onChange={e => setNewMessage(e.target.value)}
+                        placeholder="Écrire un message..."
+                        className="flex-grow bg-sport-beige/30 border border-sport-sand/50 rounded-2xl px-4 py-3.5 text-xs font-bold focus:outline-none focus:border-sport-green/50 placeholder:text-slate-400"
+                    />
+                    <button type="submit" disabled={loading} className="p-4 bg-sport-green text-white rounded-2xl flex items-center justify-center shadow-lg shadow-sport-green/20 hover:scale-105 active:scale-95 disabled:opacity-50 transition-all shrink-0">
+                        <Send size={16} />
+                    </button>
+                </form>
+            </div>
         </div>
     );
 };
