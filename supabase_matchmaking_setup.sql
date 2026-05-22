@@ -19,7 +19,7 @@ ALTER TABLE public.matches ADD CONSTRAINT matches_status_check CHECK (status IN 
 CREATE TABLE IF NOT EXISTS public.match_participants (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-    match_id UUID REFERENCES public.matches(id) ON DELETE CASCADE NOT NULL,
+    match_id BIGINT REFERENCES public.matches(id) ON DELETE CASCADE NOT NULL,
     user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
     status TEXT DEFAULT 'confirmed' CHECK (status IN ('pending', 'confirmed')),
     team TEXT CHECK (team IN ('A', 'B')),
@@ -56,7 +56,7 @@ CREATE POLICY "Modération par le créateur du match" ON public.match_participan
 CREATE TABLE IF NOT EXISTS public.match_messages (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-    match_id UUID REFERENCES public.matches(id) ON DELETE CASCADE NOT NULL,
+    match_id BIGINT REFERENCES public.matches(id) ON DELETE CASCADE NOT NULL,
     user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
     content TEXT NOT NULL
 );
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS public.notifications (
     type TEXT NOT NULL,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
-    match_id UUID REFERENCES public.matches(id) ON DELETE CASCADE,
+    match_id BIGINT REFERENCES public.matches(id) ON DELETE CASCADE,
     actor_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     is_read BOOLEAN DEFAULT FALSE NOT NULL
 );
@@ -148,7 +148,7 @@ ON CONFLICT (match_id, user_id) DO NOTHING;
 
 -- 6. RPC : REPORT MATCH SCORE
 CREATE OR REPLACE FUNCTION public.report_match_score(
-    match_uuid UUID,
+    match_uuid BIGINT,
     reporter_uuid UUID,
     score_a INT,
     score_b INT,
@@ -221,7 +221,7 @@ $$;
 
 -- 7. RPC : VALIDATE MATCH SCORE
 CREATE OR REPLACE FUNCTION public.validate_match_score(
-    match_uuid UUID,
+    match_uuid BIGINT,
     validator_uuid UUID
 )
 RETURNS VOID
@@ -320,7 +320,7 @@ $$;
 
 -- 8. RPC : REJECT MATCH SCORE
 CREATE OR REPLACE FUNCTION public.reject_match_score(
-    match_uuid UUID,
+    match_uuid BIGINT,
     rejecter_uuid UUID
 )
 RETURNS VOID
