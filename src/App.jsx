@@ -292,6 +292,7 @@ function App() {
                                                     {notif.type === 'score_rejected' && <AlertTriangle size={18} className="text-rose-500" />}
                                                     {notif.type === 'request_approved' && <Check size={18} className="text-sport-green" />}
                                                     {notif.type === 'request_rejected' && <X size={18} className="text-rose-500" />}
+                                                    {notif.type === 'new_post' && <MessageSquare size={18} className="text-sport-green" />}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex justify-between items-start">
@@ -341,13 +342,26 @@ function App() {
                                                                     </button>
                                                                 </>
                                                             )}
-                                                            {!['join_request', 'score_validation'].includes(notif.type) && (
+                                                            {notif.type === 'new_post' ? (
                                                                 <button 
-                                                                    onClick={() => handleMarkAsRead(notif.id)}
-                                                                    className="px-3 py-1 bg-sport-sand text-sport-navy text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-sport-sand/80 transition-all"
+                                                                    onClick={async () => {
+                                                                        await handleMarkAsRead(notif.id);
+                                                                        setIsNotifDrawerOpen(false);
+                                                                        window.location.href = `/profil?id=${notif.actor_id}`;
+                                                                    }}
+                                                                    className="px-3 py-1 bg-sport-green text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-sport-green/90 transition-all shadow-sm"
                                                                 >
-                                                                    Marquer comme lu
+                                                                    Voir le profil
                                                                 </button>
+                                                            ) : (
+                                                                !['join_request', 'score_validation'].includes(notif.type) && (
+                                                                    <button 
+                                                                        onClick={() => handleMarkAsRead(notif.id)}
+                                                                        className="px-3 py-1 bg-sport-sand text-sport-navy text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-sport-sand/80 transition-all"
+                                                                    >
+                                                                        Marquer comme lu
+                                                                    </button>
+                                                                )
                                                             )}
                                                         </div>
                                                     )}

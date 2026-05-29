@@ -40,6 +40,12 @@ const Profil = ({ session }) => {
     const [newPostContent, setNewPostContent] = useState('');
     const [posting, setPosting] = useState(false);
 
+    // États pour la messagerie privée éphémère (Direct Messages)
+    const [isDmOpen, setIsDmOpen] = useState(false);
+    const [dmMessages, setDmMessages] = useState([]);
+    const [newDmText, setNewDmText] = useState('');
+    const [sendingDm, setSendingDm] = useState(false);
+
     // États pour le matchmaking & saisie de score
     const [userMatches, setUserMatches] = useState([]);
     const [fetchingMatches, setFetchingMatches] = useState(false);
@@ -186,6 +192,108 @@ const Profil = ({ session }) => {
             alert("Erreur lors de la suppression : " + err.message);
         }
     };
+
+    const handleToggleReaction = async (post, emoji) => {
+        if (!session) {
+            alert("Veuillez vous connecter pour réagir aux publications.");
+            return;
+        }
+        const userId = session.user.id;
+        const currentReactions = post.reactions || {};
+        const users = currentReactions[emoji] || [];
+        let newUsers;
+        if (users.includes(userId)) {
+            newUsers = users.filter(id => id !== userId);
+        } else {
+            newUsers = [...users, userId];
+        }
+        const updatedReactions = { ...currentReactions, [emoji]: newUsers };
+
+        // Mises à jour optimistes de l'UI
+        setPosts(prev => prev.map(p => p.id === post.id ? { ...p, reactions: updatedReactions } : p));
+
+        const { error } = await supabase
+            .from('player_posts')
+            .update({ reactions: updatedReactions })
+            .eq('id', post.id);
+        
+        if (error) {
+            console.error("Erreur réaction:", error.message);
+            fetchPlayerPosts();
+        }
+    };
+
+    const fetchDirectMessages = async () => {
+        if (!session?.user?.id || !targetUserId) return;
+        const { data, error } = await supabase
+            .from('direct_messages')
+            .select('*')
+            .or(`and(sender_id.eq.${session.user.id},receiver_id.eq.${targetUserId}),and(sender_id.eq.${targetUserId},receiver_id.eq.${session.user.id})`)
+            .order('created_at', { ascending: true });
+        
+        if (!error && data) {
+            setDmMessages(data);
+        }
+    };
+
+    const handleSendDirectMessage = async (e) => {
+        e.preventDefault();
+        if (!newDmText.trim() || !session?.user?.id || !targetUserId) return;
+        if (newDmText.length > 500) {
+            alert("Votre message ne peut pas dépasser 500 caractères.");
+            return;
+        }
+        setSendingDm(true);
+        try {
+            await ensureOwnProfileExists();
+            const { error } = await supabase
+                .from('direct_messages')
+                .insert([
+                    {
+                        sender_id: session.user.id,
+                        receiver_id: targetUserId,
+                        message: newDmText.trim()
+                    }
+                ]);
+            if (error) throw error;
+            setNewDmText('');
+            fetchDirectMessages();
+        } catch (err) {
+            alert("Erreur lors de l'envoi du message : " + err.message);
+        } finally {
+            setSendingDm(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!isDmOpen || !session?.user?.id || !targetUserId) return;
+
+        fetchDirectMessages();
+
+        const channel = supabase
+            .channel(`dm_changes:${session.user.id}:${targetUserId}`)
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'direct_messages'
+            }, (payload) => {
+                const newMsg = payload.new;
+                if (
+                    (newMsg.sender_id === session.user.id && newMsg.receiver_id === targetUserId) ||
+                    (newMsg.sender_id === targetUserId && newMsg.receiver_id === session.user.id)
+                ) {
+                    setDmMessages(prev => {
+                        if (prev.some(m => m.id === newMsg.id)) return prev;
+                        return [...prev, newMsg];
+                    });
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [isDmOpen, session?.user?.id, targetUserId]);
 
     useEffect(() => {
         if (!targetUserId) {
@@ -1261,16 +1369,27 @@ const Profil = ({ session }) => {
                                 <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1 block">Abonnés</span>
                             </div>
                             {!isOwnProfile && (
-                                <button
-                                    onClick={handleFollowToggle}
-                                    className={`px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-wider active:scale-95 transition-all shadow-md ${
-                                        isFollowing
-                                            ? 'bg-sport-sand text-sport-navy border border-sport-sand'
-                                            : 'bg-sport-green text-white shadow-sport-green/20'
-                                    }`}
-                                >
-                                    {isFollowing ? "Abonné" : "S'abonner"}
-                                </button>
+                                <div className="flex space-x-3">
+                                    <button
+                                        onClick={handleFollowToggle}
+                                        className={`px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-wider active:scale-95 transition-all shadow-md ${
+                                            isFollowing
+                                                ? 'bg-sport-sand text-sport-navy border border-sport-sand'
+                                                : 'bg-sport-green text-white shadow-sport-green/20'
+                                        }`}
+                                    >
+                                        {isFollowing ? "Abonné" : "S'abonner"}
+                                    </button>
+                                    {session && (
+                                        <button
+                                            onClick={() => setIsDmOpen(true)}
+                                            className="p-3 bg-sport-navy text-white rounded-2xl active:scale-95 transition-all shadow-md shadow-sport-navy/10 flex items-center justify-center"
+                                            title="Envoyer un message privé"
+                                        >
+                                            <MessageSquare size={16} />
+                                        </button>
+                                    )}
+                                </div>
                             )}
                         </div>
 
@@ -1431,6 +1550,29 @@ const Profil = ({ session }) => {
                                             <p className="text-xs text-sport-navy font-bold leading-relaxed whitespace-pre-wrap">
                                                 {post.content}
                                             </p>
+
+                                            {/* Réactions émojis */}
+                                            <div className="flex items-center space-x-2 mt-4">
+                                                {['👍', '🔥', '👏', '😂'].map(emoji => {
+                                                    const reactors = post.reactions?.[emoji] || [];
+                                                    const hasReacted = session && reactors.includes(session.user.id);
+                                                    return (
+                                                        <button
+                                                            key={emoji}
+                                                            onClick={() => handleToggleReaction(post, emoji)}
+                                                            className={`px-3 py-1.5 rounded-full text-xs font-black transition-all flex items-center space-x-1 ${
+                                                                hasReacted 
+                                                                    ? 'bg-sport-green/10 text-sport-green border border-sport-green/20' 
+                                                                    : 'bg-sport-sand/30 text-slate-500 hover:bg-sport-sand/55 hover:text-sport-navy border border-sport-sand/40'
+                                                            }`}
+                                                        >
+                                                            <span>{emoji}</span>
+                                                            {reactors.length > 0 && <span className="text-[10px]">{reactors.length}</span>}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+
                                             <div className="flex justify-between items-center mt-3 pt-2 border-t border-sport-sand/30">
                                                 <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider">
                                                     {new Date(post.created_at).toLocaleDateString('fr-FR', {
@@ -1694,6 +1836,77 @@ const Profil = ({ session }) => {
                     onClose={() => setSelectedMatchChat(null)}
                     session={session}
                 />
+            )}
+
+            {/* MODAL MESSAGERIE PRIVÉE ÉPHÉMÈRE */}
+            {isDmOpen && (
+                <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-4 bg-sport-navy/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="w-full max-w-md bg-white rounded-[3rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-500 border border-white/20 flex flex-col h-[500px]">
+                        {/* Header */}
+                        <div className="p-6 bg-sport-navy text-white flex justify-between items-center shrink-0">
+                            <div>
+                                <h3 className="font-bold text-sm tracking-tight flex items-center space-x-2">
+                                    <MessageSquare size={16} className="text-sport-green" />
+                                    <span>Discussion privée éphémère</span>
+                                </h3>
+                                <p className="text-[10px] text-white/50 uppercase tracking-widest mt-0.5 font-bold">Avec {profile?.username || 'Joueur'}</p>
+                            </div>
+                            <button 
+                                onClick={() => setIsDmOpen(false)} 
+                                className="p-2.5 bg-white/10 hover:bg-white/20 active:scale-95 transition-all rounded-2xl text-white"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        {/* Messages Area */}
+                        <div className="flex-grow overflow-y-auto p-6 space-y-4 bg-sport-beige/25 shadow-inner scrollbar-none">
+                            {dmMessages.length > 0 ? (
+                                dmMessages.map(msg => {
+                                    const isMe = msg.sender_id === session?.user?.id;
+                                    return (
+                                        <div 
+                                            key={msg.id} 
+                                            className={`max-w-[80%] p-4 rounded-3xl text-xs font-bold leading-relaxed whitespace-pre-wrap ${
+                                                isMe 
+                                                    ? 'bg-sport-navy text-white rounded-tr-none ml-auto shadow-md' 
+                                                    : 'bg-white text-sport-navy rounded-tl-none border border-sport-sand shadow-sm'
+                                            }`}
+                                        >
+                                            <p>{msg.message}</p>
+                                            <span className={`block text-[7px] mt-1.5 uppercase ${isMe ? 'text-white/40 text-right' : 'text-slate-400'}`}>
+                                                {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <div className="flex flex-col items-center justify-center h-full text-center space-y-3 opacity-60">
+                                    <span className="text-2xl">💬</span>
+                                    <p className="text-xs text-slate-400 italic">Aucun message. Les discussions s'autodétruisent après 7 jours.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Send Input */}
+                        <form onSubmit={handleSendDirectMessage} className="p-4 bg-white border-t border-sport-sand flex space-x-3 shrink-0">
+                            <input
+                                maxLength={500}
+                                value={newDmText}
+                                onChange={e => setNewDmText(e.target.value)}
+                                placeholder="Écrire un message privé..."
+                                className="flex-1 bg-sport-beige/30 border-none rounded-2xl px-4 py-3.5 text-xs focus:ring-2 focus:ring-sport-green/20 placeholder:text-slate-400 font-bold"
+                            />
+                            <button 
+                                type="submit" 
+                                disabled={sendingDm || !newDmText.trim()}
+                                className="w-12 h-12 bg-sport-green text-white rounded-2xl flex items-center justify-center shadow-lg shadow-sport-green/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-40"
+                            >
+                                <Send size={18} />
+                            </button>
+                        </form>
+                    </div>
+                </div>
             )}
         </div>
     );
