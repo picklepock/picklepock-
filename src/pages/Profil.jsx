@@ -90,12 +90,40 @@ const Profil = ({ session }) => {
         }
     };
 
+    const ensureOwnProfileExists = async () => {
+        if (!session?.user?.id) return;
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', session.user.id)
+            .maybeSingle();
+        
+        if (error) throw error;
+        
+        if (!data) {
+            const newProfile = {
+                id: session.user.id,
+                email: session.user.email || null,
+                username: session.user.email ? session.user.email.split('@')[0] : (session.user.phone || 'Joueur_' + session.user.id.slice(0, 4)),
+                level: 'Débutant',
+                matches_played: 0,
+                wins: 0,
+                points: 0
+            };
+            const { error: createError } = await supabase
+                .from('profiles')
+                .insert([newProfile]);
+            if (createError) throw createError;
+        }
+    };
+
     const handleFollowToggle = async () => {
         if (!session) {
             alert("Veuillez vous connecter pour vous abonner à ce joueur.");
             return;
         }
         try {
+            await ensureOwnProfileExists();
             if (isFollowing) {
                 const { error } = await supabase
                     .from('profiles_followers')
@@ -129,6 +157,7 @@ const Profil = ({ session }) => {
         }
         setPosting(true);
         try {
+            await ensureOwnProfileExists();
             const { error } = await supabase
                 .from('player_posts')
                 .insert([
