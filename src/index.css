@@ -3,19 +3,26 @@
 @tailwind utilities;
 
 :root {
-  --sport-green: #059669;
-  --sport-navy: #0F172A;
-  --sport-sky: #F0F7FF;
-  --sport-sand: #E5E1DA;
-  --sport-blue: #85C1E9;
-  --sport-mint: #10B981;
+  --brand-green: #C6F432;
+  --brand-blue: #172554;
+  --bg-light: #FDFBF7;
+  --bg-dark: #0B041C;
 }
 
 body {
-  @apply bg-sport-sky text-sport-navy antialiased;
+  @apply bg-bg-light text-brand-blue antialiased;
   font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+}
+
+/* Animations Glow & Lueur pour le mode Compétitif */
+.glow-green {
+  box-shadow: 0 0 15px rgba(198, 244, 50, 0.4);
+}
+
+.glow-green-sm {
+  box-shadow: 0 0 8px rgba(198, 244, 50, 0.25);
 }
 
 /* Scrollbar Style - Native Feel */
@@ -28,12 +35,16 @@ body {
   scrollbar-width: none;
 }
 
-/* Header/Safe Area Soports */
+/* Safe Area Soports pour Apps Mobiles */
 .safe-top {
   padding-top: env(safe-area-inset-top);
 }
 
-/* Navigation Moderne - NATIVE APP DOCK */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Bottom Nav Dock */
 .bottom-nav-item {
   @apply flex flex-col items-center justify-center w-full transition-all duration-500 relative;
 }
@@ -44,17 +55,13 @@ body {
 
 /* Common Sport Badges */
 .badge-sport {
-  @apply text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border border-sport-sand bg-white/50 backdrop-blur-sm shadow-sm text-sport-navy transition-all duration-300;
+  @apply text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border border-slate-200 bg-white/50 backdrop-blur-sm shadow-sm text-brand-blue transition-all duration-300;
 }
 
-/* Animations Fun & Sport */
 @keyframes bounce-subtle {
-
-  0%,
-  100% {
+  0%, 100% {
     transform: translateY(0);
   }
-
   50% {
     transform: translateY(-4px);
   }

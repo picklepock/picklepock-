@@ -7,13 +7,18 @@ export default {
     theme: {
         extend: {
             colors: {
-                'sport-green': '#059669', // Emerald 600
-                'sport-mint': '#10B981',  // Mint logo
-                'sport-blue': '#85C1E9',  // Sky blue logo
-                'sport-sky': '#F0F7FF',   // Nouveau fond ultra-clair (Logo vibe)
-                'sport-beige': '#F5F2EE', // Accent sable
-                'sport-navy': '#0F172A',  // Texte & Prestige
-                'sport-sand': '#E7E2D8',  // Bordures
+                // Design System Antigravity 2.1
+                'brand-green': '#C6F432', // Vert lime électrique / action principale
+                'brand-blue': '#172554',  // Bleu marine profond
+                'bg-light': '#FDFBF7',    // Sable / Beige très clair amical
+                'bg-dark': '#0B041C',     // Violet spatial très sombre compétitif
+                
+                // Rétrocompatibilité (si besoin)
+                'sport-green': '#C6F432',
+                'sport-navy': '#172554',
+                'sport-sky': '#FDFBF7',
+                'sport-beige': '#F5F2EE',
+                'sport-sand': '#E7E2D8',
             },
         },
     },
