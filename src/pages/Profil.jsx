@@ -1,9 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { LogOut, Settings, UserCircle, Edit3, X, Check, Camera, ShieldAlert, HelpCircle, ArrowLeft, Send, MapPin, Phone, Clock, Image as ImageIcon, Trash2, ShieldCheck, MessageSquare, Calendar, Users, Award, AlertTriangle, ChevronRight, Trophy } from 'lucide-react';
 import Login from './Login';
 
 const Profil = ({ session }) => {
+    const [searchParams] = useSearchParams();
+    const targetUserId = searchParams.get('id') || session?.user?.id;
+    const isOwnProfile = targetUserId === session?.user?.id;
+
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
@@ -28,6 +33,13 @@ const Profil = ({ session }) => {
     const [replyText, setReplyText] = useState('');
     const [managedClubs, setManagedClubs] = useState([]);
 
+    // États pour le système social (Abonnements & Publications)
+    const [followersCount, setFollowersCount] = useState(0);
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [posts, setPosts] = useState([]);
+    const [newPostContent, setNewPostContent] = useState('');
+    const [posting, setPosting] = useState(false);
+
     // États pour le matchmaking & saisie de score
     const [userMatches, setUserMatches] = useState([]);
     const [fetchingMatches, setFetchingMatches] = useState(false);
@@ -42,36 +54,145 @@ const Profil = ({ session }) => {
     });
     const [selectedMatchChat, setSelectedMatchChat] = useState(null);
 
+    const fetchFollowersCount = async () => {
+        if (!targetUserId) return;
+        const { count, error } = await supabase
+            .from('profiles_followers')
+            .select('*', { count: 'exact', head: true })
+            .eq('following_id', targetUserId);
+        if (!error && count !== null) {
+            setFollowersCount(count);
+        }
+    };
+
+    const fetchFollowStatus = async () => {
+        if (!session?.user?.id || isOwnProfile || !targetUserId) return;
+        const { data, error } = await supabase
+            .from('profiles_followers')
+            .select('*')
+            .eq('follower_id', session.user.id)
+            .eq('following_id', targetUserId)
+            .maybeSingle();
+        if (!error) {
+            setIsFollowing(!!data);
+        }
+    };
+
+    const fetchPlayerPosts = async () => {
+        if (!targetUserId) return;
+        const { data, error } = await supabase
+            .from('player_posts')
+            .select('*')
+            .eq('author_id', targetUserId)
+            .order('created_at', { ascending: false });
+        if (!error && data) {
+            setPosts(data);
+        }
+    };
+
+    const handleFollowToggle = async () => {
+        if (!session) {
+            alert("Veuillez vous connecter pour vous abonner à ce joueur.");
+            return;
+        }
+        try {
+            if (isFollowing) {
+                const { error } = await supabase
+                    .from('profiles_followers')
+                    .delete()
+                    .eq('follower_id', session.user.id)
+                    .eq('following_id', targetUserId);
+                if (error) throw error;
+                setIsFollowing(false);
+                setFollowersCount(prev => Math.max(0, prev - 1));
+            } else {
+                const { error } = await supabase
+                    .from('profiles_followers')
+                    .insert([
+                        { follower_id: session.user.id, following_id: targetUserId }
+                    ]);
+                if (error) throw error;
+                setIsFollowing(true);
+                setFollowersCount(prev => prev + 1);
+            }
+        } catch (err) {
+            alert("Erreur lors de l'abonnement : " + err.message);
+        }
+    };
+
+    const handlePublishPost = async (e) => {
+        e.preventDefault();
+        if (!newPostContent.trim()) return;
+        if (newPostContent.length > 280) {
+            alert("Votre publication ne peut pas dépasser 280 caractères.");
+            return;
+        }
+        setPosting(true);
+        try {
+            const { error } = await supabase
+                .from('player_posts')
+                .insert([
+                    { author_id: session.user.id, content: newPostContent.trim() }
+                ]);
+            if (error) throw error;
+            setNewPostContent('');
+            fetchPlayerPosts();
+        } catch (err) {
+            alert("Erreur lors de la publication : " + err.message);
+        } finally {
+            setPosting(false);
+        }
+    };
+
+    const handleDeletePost = async (postId) => {
+        if (!window.confirm("Voulez-vous vraiment supprimer cette publication ?")) return;
+        try {
+            const { error } = await supabase
+                .from('player_posts')
+                .delete()
+                .eq('id', postId);
+            if (error) throw error;
+            setPosts(prev => prev.filter(p => p.id !== postId));
+        } catch (err) {
+            alert("Erreur lors de la suppression : " + err.message);
+        }
+    };
+
     useEffect(() => {
-        if (!session?.user?.id) {
+        if (!targetUserId) {
             setLoading(false);
             return;
         }
 
         fetchProfile();
+        fetchFollowersCount();
+        fetchFollowStatus();
+        fetchPlayerPosts();
 
         // Abonnement temps réel pour les changements de participation ou de matchs
         const channel = supabase
-            .channel(`user_matches_changes:${session.user.id}`)
+            .channel(`user_matches_changes:${targetUserId}`)
             .on('postgres_changes', {
                 event: '*',
                 schema: 'public',
                 table: 'match_participants',
-                filter: `user_id=eq.${session.user.id}`
+                filter: `user_id=eq.${targetUserId}`
             }, () => {
-                fetchUserMatches(session.user.id);
+                fetchUserMatches(targetUserId);
             })
             .on('postgres_changes', {
                 event: 'UPDATE',
                 schema: 'public',
                 table: 'matches'
             }, () => {
-                fetchUserMatches(session.user.id);
+                fetchUserMatches(targetUserId);
                 // Rafraîchir aussi le profil si ses stats changent
-                supabase.from('profiles').select('*').eq('id', session.user.id).single().then(({ data }) => {
+                supabase.from('profiles').select('*').eq('id', targetUserId).single().then(({ data }) => {
                     if (data) {
                         setProfile(data);
-                        setEditForm(data);
+                        if (isOwnProfile) {
+                            setEditForm(data);
+                        }
                     }
                 });
             })
@@ -80,47 +201,52 @@ const Profil = ({ session }) => {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [session?.user?.id]);
+    }, [targetUserId, session?.user?.id]);
 
     const fetchProfile = async () => {
         try {
-            const user = session.user;
-            if (user) {
-                let { data, error } = await supabase
+            if (!targetUserId) {
+                setLoading(false);
+                return;
+            }
+            let { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', targetUserId)
+                .single();
+
+            if (error && error.code === 'PGRST116' && isOwnProfile && session?.user?.id) {
+                const newProfile = {
+                    id: session.user.id,
+                    email: session.user.email || null,
+                    username: session.user.email ? session.user.email.split('@')[0] : (session.user.phone || 'Joueur_' + session.user.id.slice(0, 4)),
+                    level: 'Débutant',
+                    matches_played: 0,
+                    wins: 0,
+                    points: 0
+                };
+                const { data: created, error: createError } = await supabase
                     .from('profiles')
-                    .select('*')
-                    .eq('id', user.id)
-                    .single();
+                    .insert([newProfile])
+                    .select().single();
 
-                if (error && error.code === 'PGRST116') {
-                    const newProfile = {
-                        id: user.id,
-                        email: user.email || null,
-                        username: user.email ? user.email.split('@')[0] : (user.phone || 'Joueur_' + user.id.slice(0, 4)),
-                        level: 'Débutant',
-                        matches_played: 0,
-                        wins: 0,
-                        points: 0
-                    };
-                    const { data: created, error: createError } = await supabase
-                        .from('profiles')
-                        .insert([newProfile])
-                        .select().single();
-
-                    if (createError) throw createError;
-                    setProfile(created);
-                    setEditForm(created);
-                } else if (error) {
-                    throw error;
-                } else {
-                    setProfile(data);
+                if (createError) throw createError;
+                setProfile(created);
+                setEditForm(created);
+                fetchManagedClubs(session.user.id);
+                fetchUserMatches(session.user.id);
+            } else if (error) {
+                throw error;
+            } else {
+                setProfile(data);
+                if (isOwnProfile) {
                     setEditForm(data);
                     if (data.role === 'admin') {
                         fetchAdminData();
                     }
-                    fetchManagedClubs(user.id);
-                    fetchUserMatches(user.id);
+                    fetchManagedClubs(targetUserId);
                 }
+                fetchUserMatches(targetUserId);
             }
         } catch (err) {
             console.error('Error:', err.message);
@@ -756,17 +882,17 @@ const Profil = ({ session }) => {
     const pastMatches = userMatches.filter(m => m.score_status === 'validated');
 
     if (loading && !isEditing) return <div className="flex items-center justify-center min-h-[60vh]"><div className="w-6 h-6 border-2 border-sport-green border-t-transparent rounded-full animate-spin"></div></div>;
-    if (!session) return <div className="p-4 flex flex-col items-center justify-center min-h-[70vh]"><div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-6"><UserCircle size={48} /></div><h2 className="text-xl font-bold text-gray-900 mb-2">Compte non connecté</h2><Login /></div>;
+    if (!session && !searchParams.get('id')) return <div className="p-4 flex flex-col items-center justify-center min-h-[70vh]"><div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-6"><UserCircle size={48} /></div><h2 className="text-xl font-bold text-gray-900 mb-2">Compte non connecté</h2><Login /></div>;
 
     return (
         <div className="p-6 max-w-lg mx-auto pb-24 text-sport-navy">
             {/* HEADER */}
             <div className="flex justify-between items-center mb-10">
                 <h1 className="text-2xl font-bold tracking-tight text-sport-navy">
-                    {isEditing ? 'Éditer le profil' : 'Mon Profil'}
+                    {isEditing ? 'Éditer le profil' : isOwnProfile ? 'Mon Profil' : 'Profil Joueur'}
                 </h1>
                 <div className="flex space-x-3">
-                    {!isEditing ? (
+                    {!isEditing && isOwnProfile ? (
                         <>
                             {profile?.role === 'admin' && (
                                 <button
@@ -793,9 +919,13 @@ const Profil = ({ session }) => {
                                 <LogOut size={18} />
                             </button>
                         </>
-                    ) : (
+                    ) : isEditing ? (
                         <button onClick={() => setIsEditing(false)} className="p-3 bg-white text-slate-400 rounded-2xl shadow-sm border border-sport-sand active:scale-95 transition-all">
                             <X size={18} />
+                        </button>
+                    ) : !isOwnProfile && (
+                        <button onClick={() => window.history.back()} className="p-3 bg-white text-slate-400 rounded-2xl shadow-sm border border-sport-sand active:scale-95 transition-all" title="Retour">
+                            <ArrowLeft size={18} />
                         </button>
                     )}
                 </div>
@@ -1094,6 +1224,27 @@ const Profil = ({ session }) => {
                                 </span>
                             )}
                         </div>
+                        
+                        {/* Abonnement et followers */}
+                        <div className="flex items-center space-x-6 mt-6">
+                            <div className="text-center">
+                                <span className="block text-xl font-black text-sport-navy leading-none">{followersCount}</span>
+                                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1 block">Abonnés</span>
+                            </div>
+                            {!isOwnProfile && (
+                                <button
+                                    onClick={handleFollowToggle}
+                                    className={`px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-wider active:scale-95 transition-all shadow-md ${
+                                        isFollowing
+                                            ? 'bg-sport-sand text-sport-navy border border-sport-sand'
+                                            : 'bg-sport-green text-white shadow-sport-green/20'
+                                    }`}
+                                >
+                                    {isFollowing ? "Abonné" : "S'abonner"}
+                                </button>
+                            )}
+                        </div>
+
                         {profile?.bio && <p className="mt-8 text-center text-slate-500 text-sm italic px-10 leading-relaxed max-w-md opacity-80 font-medium">"{profile.bio}"</p>}
                     </div>
 
@@ -1126,7 +1277,7 @@ const Profil = ({ session }) => {
                             <div className="flex justify-between items-center">
                                 <h3 className="text-lg font-black uppercase tracking-tight text-sport-navy flex items-center space-x-2">
                                     <Trophy size={20} className="text-sport-green animate-pulse" />
-                                    <span>Mes Matchs Circuit</span>
+                                    <span>{isOwnProfile ? "Mes Matchs Circuit" : "Matchs Circuit"}</span>
                                 </h3>
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-sport-beige px-3 py-1 rounded-lg">
                                     Bêta 2026
@@ -1204,6 +1355,78 @@ const Profil = ({ session }) => {
                                             )
                                         )}
                                     </>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* PUBLICATIONS / FIL D'ACTUALITÉ */}
+                        <div className="bg-white p-8 rounded-[3rem] border border-sport-sand shadow-sm space-y-6">
+                            <h3 className="text-lg font-black uppercase tracking-tight text-sport-navy flex items-center space-x-2">
+                                <MessageSquare size={20} className="text-sport-green" />
+                                <span>{isOwnProfile ? "Mes Publications" : "Publications de " + (profile?.username || 'Joueur')}</span>
+                            </h3>
+
+                            {/* Formulaire de publication pour le propriétaire */}
+                            {isOwnProfile && session && (
+                                <form onSubmit={handlePublishPost} className="space-y-3 bg-sport-beige/15 p-4 rounded-[2rem] border border-sport-sand/65">
+                                    <div className="relative">
+                                        <textarea
+                                            maxLength={280}
+                                            value={newPostContent}
+                                            onChange={e => setNewPostContent(e.target.value)}
+                                            placeholder="Partagez quelque chose avec le circuit... (max 280 car.)"
+                                            rows={3}
+                                            className="w-full p-4 bg-white border border-sport-sand rounded-2xl resize-none focus:outline-none focus:border-sport-green transition-all text-xs font-bold shadow-inner placeholder:text-slate-400"
+                                        />
+                                        <span className="absolute bottom-3 right-3 text-[9px] font-bold text-slate-400">
+                                            {280 - newPostContent.length} / 280
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <button
+                                            type="submit"
+                                            disabled={posting || !newPostContent.trim()}
+                                            className="px-5 py-2.5 bg-sport-navy text-white text-[10px] font-bold rounded-xl uppercase tracking-widest active:scale-95 transition-all disabled:opacity-40"
+                                        >
+                                            {posting ? "Publication..." : "Publier"}
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
+
+                            {/* Liste des publications */}
+                            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1 scrollbar-none">
+                                {posts.length > 0 ? (
+                                    posts.map(post => (
+                                        <div key={post.id} className="p-5 bg-sport-sand/15 rounded-3xl border border-sport-sand/40 relative group">
+                                            <p className="text-xs text-sport-navy font-bold leading-relaxed whitespace-pre-wrap">
+                                                {post.content}
+                                            </p>
+                                            <div className="flex justify-between items-center mt-3 pt-2 border-t border-sport-sand/30">
+                                                <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider">
+                                                    {new Date(post.created_at).toLocaleDateString('fr-FR', {
+                                                        day: 'numeric',
+                                                        month: 'short',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </span>
+                                                {isOwnProfile && (
+                                                    <button
+                                                        onClick={() => handleDeletePost(post.id)}
+                                                        className="text-slate-400 hover:text-rose-500 transition-colors p-1"
+                                                        title="Supprimer la publication"
+                                                    >
+                                                        <Trash2 size={12} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-8 text-slate-400 italic text-xs">
+                                        Aucune publication pour le moment.
+                                    </div>
                                 )}
                             </div>
                         </div>

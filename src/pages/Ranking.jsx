@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Trophy, MapPin, Award, Search, Filter } from 'lucide-react';
 
 const Ranking = () => {
     const [players, setPlayers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchRankings();
@@ -58,7 +60,8 @@ const Ranking = () => {
                         return (
                             <div
                                 key={player.id}
-                                className={`flex items-center p-6 bg-white border border-sport-sand rounded-[2.5rem] shadow-sm transition-all hover:scale-[1.03] hover:shadow-xl hover:shadow-sport-navy/5 ${pos === 1 ? 'ring-2 ring-sport-green/20 border-sport-green/30' : ''}`}
+                                onClick={() => navigate(`/profil?id=${player.id}`)}
+                                className={`flex items-center p-6 bg-white border border-sport-sand rounded-[2.5rem] shadow-sm transition-all hover:scale-[1.03] hover:shadow-xl hover:shadow-sport-navy/5 cursor-pointer ${pos === 1 ? 'ring-2 ring-sport-green/20 border-sport-green/30' : ''}`}
                             >
                                 <div className={`w-14 h-14 rounded-[1.5rem] flex items-center justify-center font-black text-sm mr-6 shadow-sm border border-sport-sand ${pos === 1 ? 'bg-amber-400 text-white shadow-xl shadow-amber-400/20' :
                                     pos === 2 ? 'bg-slate-200 text-slate-600' :
