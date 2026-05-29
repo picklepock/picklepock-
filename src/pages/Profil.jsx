@@ -90,7 +90,8 @@ const Profil = ({ session }) => {
             .from('player_posts')
             .select('*')
             .eq('author_id', targetUserId)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .range(0, 19);
         if (!error && data) {
             setPosts(data);
         }
@@ -229,10 +230,11 @@ const Profil = ({ session }) => {
             .from('direct_messages')
             .select('*')
             .or(`and(sender_id.eq.${session.user.id},receiver_id.eq.${targetUserId}),and(sender_id.eq.${targetUserId},receiver_id.eq.${session.user.id})`)
-            .order('created_at', { ascending: true });
+            .order('created_at', { ascending: false })
+            .range(0, 19);
         
         if (!error && data) {
-            setDmMessages(data);
+            setDmMessages([...data].reverse());
         }
     };
 
