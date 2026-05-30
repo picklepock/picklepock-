@@ -20,7 +20,8 @@ const Profil = ({ session }) => {
         gender: 'H',
         region: '',
         bio: '',
-        avatar_url: ''
+        avatar_url: '',
+        country: ''
     });
     const [uploading, setUploading] = useState(false);
     const [adminView, setAdminView] = useState(false); // To toggle admin panel in profile
@@ -115,7 +116,8 @@ const Profil = ({ session }) => {
                 level: 'Débutant',
                 matches_played: 0,
                 wins: 0,
-                points: 0
+                points: 0,
+                country: ''
             };
             const { error: createError } = await supabase
                 .from('profiles')
@@ -362,7 +364,8 @@ const Profil = ({ session }) => {
                     level: 'Débutant',
                     matches_played: 0,
                     wins: 0,
-                    points: 0
+                    points: 0,
+                    country: ''
                 };
                 const { data: created, error: createError } = await supabase
                     .from('profiles')
@@ -993,6 +996,7 @@ const Profil = ({ session }) => {
                     region: editForm.region,
                     bio: editForm.bio,
                     avatar_url: editForm.avatar_url,
+                    country: editForm.country,
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'id' }) // Indispensable pour l'upsert par ID
                 .select();
@@ -1147,6 +1151,17 @@ const Profil = ({ session }) => {
                                     value={editForm.region || ''}
                                     onChange={e => setEditForm({ ...editForm, region: e.target.value })}
                                     placeholder="Ex: Île-de-France"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Pays d'origine</label>
+                                <input
+                                    type="text"
+                                    className="w-full p-4 bg-sport-beige/20 rounded-2xl border border-sport-sand focus:outline-none focus:border-sport-green transition-all font-bold text-sm shadow-inner"
+                                    value={editForm.country || ''}
+                                    onChange={e => setEditForm({ ...editForm, country: e.target.value })}
+                                    placeholder="Ex: France"
                                 />
                             </div>
 
@@ -1352,6 +1367,11 @@ const Profil = ({ session }) => {
                             <span className="px-5 py-2 bg-white text-sport-navy text-[10px] font-bold rounded-xl uppercase tracking-widest border border-sport-sand shadow-sm">
                                 {profile?.region || 'National'}
                             </span>
+                            {profile?.country && (
+                                <span className="px-5 py-2 bg-white text-sport-navy text-[10px] font-bold rounded-xl uppercase tracking-widest border border-sport-sand shadow-sm">
+                                    📍 {profile.country}
+                                </span>
+                            )}
                             {profile?.role === 'admin' && (
                                 <span className="px-5 py-2 bg-sport-navy text-white text-[10px] font-bold rounded-xl uppercase tracking-widest flex items-center shadow-lg shadow-sport-navy/20">
                                     <ShieldAlert size={12} className="mr-2" /> Admin
