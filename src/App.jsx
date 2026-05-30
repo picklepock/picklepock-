@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom';
-import { CircleUser, LayoutDashboard, Zap, Crown, Compass, Bell, X, Check, Users, Trophy, MessageSquare, AlertTriangle } from 'lucide-react';
+import { CircleUser, LayoutDashboard, Zap, Crown, Compass, Bell, X, Check, Users, Trophy, MessageSquare, AlertTriangle, Settings } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import Profil from './pages/Profil';
 import Accueil from './pages/Accueil';
@@ -11,12 +11,14 @@ import Login from './pages/Login';
 import UpdatePassword from './pages/UpdatePassword';
 import Help from './pages/Help';
 import ClubDetail from './pages/ClubDetail';
+import SettingsModal from './components/SettingsModal';
 
 function App() {
     const [session, setSession] = useState(null);
     const [loading, setLoading] = useState(true);
     const [notifications, setNotifications] = useState([]);
     const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -160,6 +162,13 @@ function App() {
                 {/* Header Fixe Native App */}
                 <header className="fixed top-0 left-0 right-0 h-20 bg-sport-sky/95 backdrop-blur-xl border-b border-sport-sand flex items-center justify-between px-6 z-[60] safe-top">
                     <div className="flex items-center space-x-4">
+                        <button 
+                            onClick={() => setIsSettingsOpen(true)}
+                            className="w-10 h-10 bg-white rounded-full border border-sport-sand flex items-center justify-center text-sport-navy shadow-sm active:scale-90 transition-transform"
+                            title="Paramètres"
+                        >
+                            <Settings size={20} />
+                        </button>
                         <div className="w-10 h-10 bg-white rounded-2xl p-1.5 shadow-sm border border-sport-sand flex items-center justify-center">
                             <img src="/logo.png" alt="PicklePock Logo" className="w-full h-full object-contain" />
                         </div>
@@ -381,6 +390,8 @@ function App() {
                         </div>
                     </div>
                 )}
+                
+                <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
             </div>
         </Router>
     );

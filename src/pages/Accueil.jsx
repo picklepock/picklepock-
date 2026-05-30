@@ -188,7 +188,7 @@ const Accueil = ({ session }) => {
                 <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm border border-sport-sand group cursor-pointer transition-all hover:shadow-lg hover:border-sport-green/20">
                     <div className="relative h-48 overflow-hidden">
                         <img
-                            src="https://images.unsplash.com/photo-1626225965071-8231c1ca9248?q=80&w=600&h=400&auto=format&fit=crop"
+                            src="/assets/images/tournament.png"
                             alt="Tournoi de Pickleball"
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />

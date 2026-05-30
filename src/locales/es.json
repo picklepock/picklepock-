@@ -1,0 +1,22 @@
+{
+  "settings": {
+    "title": "Ajustes",
+    "preferences": "Preferencias Generales",
+    "theme": "Tema Oscuro",
+    "theme_desc": "Activar modo noche",
+    "sounds": "Efectos de sonido UI",
+    "sounds_desc": "Activar sonidos de la app",
+    "notifications": "Notificaciones",
+    "notif_messages": "Mensajes nuevos",
+    "notif_followers": "Seguidores nuevos",
+    "notif_posts": "Publicaciones nuevas",
+    "languages": "Idiomas",
+    "premium_title": "PicklePock Premium",
+    "premium_desc": "Desbloquea torneos y insignias certificadas",
+    "premium_btn": "Iniciar prueba gratuita de 7 días",
+    "account": "Cuenta",
+    "edit_profile": "Editar perfil",
+    "logout": "Cerrar sesión",
+    "delete_account": "Eliminar cuenta"
+  }
+}
