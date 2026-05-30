@@ -66,3 +66,88 @@ body {
     transform: translateY(-4px);
   }
 }
+
+/* Global Dark Mode Overrides */
+.dark body {
+  background-color: var(--bg-dark) !important;
+  color: #FDFBF7 !important;
+}
+
+.dark main {
+  background-color: var(--bg-dark) !important;
+}
+
+.dark header {
+  background-color: rgba(11, 4, 28, 0.95) !important;
+  color: #FDFBF7 !important;
+  border-color: #1e1b4b !important;
+}
+
+.dark header h1 {
+  color: #FDFBF7 !important;
+}
+
+.dark header button {
+  background-color: #16122c !important;
+  color: #FDFBF7 !important;
+  border-color: #2b264e !important;
+}
+
+.dark .bg-white {
+  background-color: #16122c !important;
+  color: #FDFBF7 !important;
+  border-color: #2b264e !important;
+}
+
+.dark .bg-sport-sky {
+  background-color: #0B041C !important;
+}
+
+.dark .bg-sport-beige {
+  background-color: #16122c !important;
+}
+
+.dark .text-sport-navy, 
+.dark .text-brand-blue, 
+.dark .text-slate-800 {
+  color: #FDFBF7 !important;
+}
+
+.dark .text-slate-500, 
+.dark .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+.dark .border-sport-sand, 
+.dark .border-slate-100, 
+.dark .border-slate-200 {
+  border-color: #2b264e !important;
+}
+
+.dark input, 
+.dark textarea, 
+.dark select {
+  background-color: #1e1b4b !important;
+  color: #ffffff !important;
+  border-color: #312e81 !important;
+}
+
+.dark .bottom-nav-item .bg-white {
+  background-color: #ffffff !important;
+  color: #0B041C !important;
+}
+
+/* Hide Google Translate top bar and branding */
+.goog-te-banner-frame.skiptranslate, .goog-te-gadget-icon {
+  display: none !important;
+}
+body {
+  top: 0px !important;
+}
+.goog-te-balloon-frame {
+  display: none !important;
+}
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+}

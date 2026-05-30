@@ -180,7 +180,14 @@ const SettingsModal = ({ isOpen, onClose }) => {
                             {languages.map((lang) => (
                                 <button
                                     key={lang.code}
-                                    onClick={() => i18n.changeLanguage(lang.code)}
+                                    onClick={() => {
+                                        i18n.changeLanguage(lang.code);
+                                        const select = document.querySelector('.goog-te-combo');
+                                        if (select) {
+                                            select.value = lang.code;
+                                            select.dispatchEvent(new Event('change'));
+                                        }
+                                    }}
                                     className={`flex items-center justify-between p-3 rounded-xl border text-xs font-bold transition-all ${
                                         i18n.language === lang.code 
                                             ? 'bg-sport-navy text-white border-sport-navy dark:bg-sport-mint dark:text-slate-900 dark:border-sport-mint' 
