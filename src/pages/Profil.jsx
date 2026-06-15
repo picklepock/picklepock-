@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { LogOut, Settings, UserCircle, Edit3, X, Check, Camera, ShieldAlert, HelpCircle, ArrowLeft, Send, MapPin, Phone, Clock, Image as ImageIcon, Trash2, ShieldCheck, MessageSquare, Calendar, Users, Award, AlertTriangle, ChevronRight, Trophy } from 'lucide-react';
 import Login from './Login';
 
 const Profil = ({ session }) => {
+    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const targetUserId = searchParams.get('id') || session?.user?.id;
     const isOwnProfile = targetUserId === session?.user?.id;
@@ -1646,7 +1647,7 @@ const Profil = ({ session }) => {
                             </div>
                             {/* AIDE & SUPPORT */}
                             <div
-                                onClick={() => window.location.href = '/help'}
+                                onClick={() => navigate('/help')}
                                 className="col-span-2 bg-white px-8 py-6 rounded-[2.5rem] border border-sport-sand shadow-sm flex items-center space-x-6 cursor-pointer hover:border-sport-green transition-all group"
                             >
                                 <div className="w-14 h-14 bg-sport-beige rounded-[1.5rem] flex items-center justify-center text-sport-green group-hover:bg-sport-green group-hover:text-white transition-all shadow-inner">
@@ -1668,7 +1669,7 @@ const Profil = ({ session }) => {
                                     {managedClubs.map(club => (
                                         <div 
                                             key={club.id}
-                                            onClick={() => window.location.href = `/clubs/${club.id}`}
+                                            onClick={() => navigate(`/clubs/${club.id}`)}
                                             className="bg-white p-6 rounded-[2.5rem] border border-sport-sand shadow-sm flex items-center justify-between group cursor-pointer hover:border-amber-400 transition-all"
                                         >
                                             <div className="flex items-center space-x-4">

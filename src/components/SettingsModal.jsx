@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { X, Moon, Sun, Volume2, Bell, Globe, Crown, User, LogOut, Trash2 } from 'lucide-react';
 
 const SettingsModal = ({ isOpen, onClose }) => {
+    const navigate = useNavigate();
     const { t, i18n } = useTranslation();
 
     // -- États des Paramètres
@@ -233,7 +235,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
                         {/* Modifier le profil */}
                         <button
                             onClick={() => {
-                                window.location.href = '/profil';
+                                navigate('/profil');
                                 onClose();
                             }}
                             className="w-full py-3 bg-sport-sky/20 dark:bg-slate-800 hover:bg-sport-sky/40 dark:hover:bg-slate-700/60 rounded-xl text-xs font-bold text-sport-navy dark:text-white transition-colors flex items-center justify-center space-x-2"

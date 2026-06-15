@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Check, X, Trophy, Users, AlertTriangle, ArrowRight } from 'lucide-react';
 import { approveJoinRequest, rejectJoinRequest } from '../lib/matchHelpers';
 
 const Accueil = ({ session }) => {
+    const navigate = useNavigate();
     const [pendingRequests, setPendingRequests] = useState([]);
     const [pendingScores, setPendingScores] = useState([]);
     const [loadingActions, setLoadingActions] = useState(false);
@@ -209,14 +211,14 @@ const Accueil = ({ session }) => {
                 <h2 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em] px-1">Raccourcis</h2>
                 <div className="grid grid-cols-2 gap-4">
                     <button 
-                        onClick={() => window.location.href = '/profil'}
+                        onClick={() => navigate('/profil')}
                         className="bg-white p-6 rounded-[2rem] shadow-sm border border-sport-sand flex flex-col items-center justify-center space-y-4 hover:shadow-md hover:border-sport-green/20 transition-all active:scale-95 group"
                     >
                         <div className="w-14 h-14 bg-sport-beige rounded-2xl flex items-center justify-center text-xl shadow-inner group-hover:bg-sport-green group-hover:text-white transition-all">🏆</div>
                         <span className="font-bold text-sport-navy text-xs uppercase tracking-wider">Mes Matchs</span>
                     </button>
                     <button 
-                        onClick={() => window.location.href = '/clubs'}
+                        onClick={() => navigate('/clubs')}
                         className="bg-white p-6 rounded-[2rem] shadow-sm border border-sport-sand flex flex-col items-center justify-center space-y-4 hover:shadow-md hover:border-sport-green/20 transition-all active:scale-95 group"
                     >
                         <div className="w-14 h-14 bg-sport-beige rounded-2xl flex items-center justify-center text-xl shadow-inner group-hover:bg-sport-green group-hover:text-white transition-all">📍</div>
@@ -230,7 +232,7 @@ const Accueil = ({ session }) => {
                     <h2 className="text-2xl font-bold mb-2 tracking-tight">Devenir Pro ?</h2>
                     <p className="text-slate-300 text-xs mb-8 max-w-[180px] leading-relaxed opacity-80">Rejoignez le classement national et défiez les meilleurs joueurs.</p>
                     <button 
-                        onClick={() => window.location.href = '/ranking'}
+                        onClick={() => navigate('/ranking')}
                         className="bg-sport-green text-white px-8 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-sport-green/20 hover:scale-105 active:scale-95 transition-all"
                     >
                         En savoir plus

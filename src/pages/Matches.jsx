@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { PlusCircle, Trophy, Calendar, MapPin, Users, Filter, X, Check, Clock, Send, MessageSquare, Lock, Unlock, LogOut, Loader2 } from 'lucide-react';
 import { joinMatch, leaveMatch } from '../lib/matchHelpers';
@@ -143,6 +144,7 @@ const MatchChatModal = ({ match, onClose, session }) => {
 };
 
 const Matches = ({ session }) => {
+    const navigate = useNavigate();
     const [view, setView] = useState('matchs');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -419,7 +421,7 @@ const Matches = ({ session }) => {
                                         {/* Action principale d'inscription / désinscription */}
                                         {!session ? (
                                             <button 
-                                                onClick={() => window.location.href = '/login'}
+                                                onClick={() => navigate('/login')}
                                                 className="flex-1 py-4 bg-sport-beige hover:bg-sport-green hover:text-white text-sport-navy rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border border-sport-sand"
                                             >
                                                 Se connecter pour rejoindre

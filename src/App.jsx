@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import { Routes, Route, NavLink, Navigate, useNavigate } from 'react-router-dom';
 import { CircleUser, LayoutDashboard, Zap, Crown, Compass, Bell, X, Check, Users, Trophy, MessageSquare, AlertTriangle, Settings } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import Profil from './pages/Profil';
@@ -14,6 +14,7 @@ import ClubDetail from './pages/ClubDetail';
 import SettingsModal from './components/SettingsModal';
 
 function App() {
+    const navigate = useNavigate();
     const [session, setSession] = useState(null);
     const [loading, setLoading] = useState(true);
     const [notifications, setNotifications] = useState([]);
@@ -156,8 +157,7 @@ function App() {
     const unreadCount = notifications.filter(n => !n.is_read).length;
 
     return (
-        <Router>
-            <div className="flex flex-col h-screen overflow-hidden bg-sport-sky font-['Plus_Jakarta_Sans']">
+        <div className="flex flex-col h-screen overflow-hidden bg-sport-sky font-['Plus_Jakarta_Sans']">
                 
                 {/* Header Fixe Native App */}
                 <header className="fixed top-0 left-0 right-0 h-20 bg-sport-sky/95 backdrop-blur-xl border-b border-sport-sand flex items-center justify-between px-6 z-[60] safe-top">
@@ -357,7 +357,7 @@ function App() {
                                                                     onClick={async () => {
                                                                         await handleMarkAsRead(notif.id);
                                                                         setIsNotifDrawerOpen(false);
-                                                                        window.location.href = `/profil?id=${notif.actor_id}`;
+                                                                        navigate(`/profil?id=${notif.actor_id}`);
                                                                     }}
                                                                     className="px-3 py-1 bg-sport-green text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-sport-green/90 transition-all shadow-sm"
                                                                 >
@@ -393,8 +393,7 @@ function App() {
                 
                 <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
             </div>
-        </Router>
-    );
+        );
 }
 
 export default App;
