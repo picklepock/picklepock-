@@ -5,7 +5,7 @@
 -- 1. Table des terrains (courts)
 CREATE TABLE IF NOT EXISTS public.courts (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    club_id UUID REFERENCES public.clubs(id) ON DELETE CASCADE NOT NULL,
+    club_id BIGINT REFERENCES public.clubs(id) ON DELETE CASCADE NOT NULL,
     name TEXT NOT NULL,
     sport TEXT DEFAULT 'Pickleball' NOT NULL, -- Pickleball, Padel, Tennis, Squash
     type TEXT CHECK (type IN ('Indoor', 'Outdoor')) DEFAULT 'Outdoor',
