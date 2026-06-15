@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { 
@@ -6,7 +6,7 @@ import {
     ArrowLeft, CheckCircle, ShieldCheck, 
     Plus, UserPlus, UserMinus, Clock, 
     ChevronRight, Info, Calendar, DollarSign,
-    TrendingUp, PlusCircle, Search, Trash2, CreditCard
+    TrendingUp, PlusCircle, Search, Trash2, CreditCard, Settings
 } from 'lucide-react';
 
 const ClubDetail = ({ session }) => {
@@ -34,6 +34,14 @@ const ClubDetail = ({ session }) => {
     const [newCourtData, setNewCourtData] = useState({ name: '', sport: 'Pickleball', type: 'Outdoor', hourly_rate: 20 });
     const [newBookingData, setNewBookingData] = useState({ client_name: '', court_id: '', start_time: '', end_time: '', payment_status: 'pending' });
 
+    // -- Club Settings (Equipment Configuration)
+    const [editClubEquipment, setEditClubEquipment] = useState({
+        has_racket_rental: true,
+        racket_rental_price: 5.00,
+        has_ball_sale: true,
+        ball_sale_price: 6.00
+    });
+
     // -- Client Booking Selector States
     const [bookingDate, setBookingDate] = useState(() => {
         const today = new Date();
@@ -42,6 +50,12 @@ const ClubDetail = ({ session }) => {
     const [bookingSport, setBookingSport] = useState('Pickleball');
     const [selectedSlot, setSelectedSlot] = useState(null); // { time: '14:00', court: {id, name, hourly_rate} }
     const [showConfirmBookingModal, setShowConfirmBookingModal] = useState(false);
+
+    // -- Booking Options Selected by Client
+    const [playersCount, setPlayersCount] = useState(2);
+    const [rentRacketsCount, setRentRacketsCount] = useState(0);
+    const [buyBallsCount, setBuyBallsCount] = useState(0);
+    const [publishAnnouncement, setPublishAnnouncement] = useState(false);
 
     // -- Mock Fallbacks (If Supabase Tables are not created yet)
     const mockCourts = [
@@ -104,6 +118,12 @@ const ClubDetail = ({ session }) => {
 
             if (error) throw error;
             setClub(data);
+            setEditClubEquipment({
+                has_racket_rental: data.has_racket_rental !== undefined ? data.has_racket_rental : true,
+                racket_rental_price: data.racket_rental_price !== undefined ? parseFloat(data.racket_rental_price) : 5.00,
+                has_ball_sale: data.has_ball_sale !== undefined ? data.has_ball_sale : true,
+                ball_sale_price: data.ball_sale_price !== undefined ? parseFloat(data.ball_sale_price) : 6.00
+            });
         } catch (err) {
             console.error("Error fetching club details:", err);
             navigate('/clubs');
@@ -264,6 +284,29 @@ const ClubDetail = ({ session }) => {
         }
     };
 
+    const handleUpdateClubEquipment = async (e) => {
+        e.preventDefault();
+        try {
+            const { error } = await supabase
+                .from('clubs')
+                .update({
+                    has_racket_rental: editClubEquipment.has_racket_rental,
+                    racket_rental_price: parseFloat(editClubEquipment.racket_rental_price),
+                    has_ball_sale: editClubEquipment.has_ball_sale,
+                    ball_sale_price: parseFloat(editClubEquipment.ball_sale_price)
+                })
+                .eq('id', id);
+            
+            if (error) throw error;
+            setClub({ ...club, ...editClubEquipment });
+            alert("Paramètres du club mis à jour avec succès !");
+        } catch (err) {
+            console.warn("Table update failed, modifying local state", err.message);
+            setClub({ ...club, ...editClubEquipment });
+            alert("Paramètres mis à jour (Simulation) !");
+        }
+    };
+
     const handleTogglePayment = async (bookingId) => {
         const booking = bookings.find(b => b.id === bookingId);
         if (!booking) return;
@@ -309,11 +352,9 @@ const ClubDetail = ({ session }) => {
     }
 
     const checkSlotAvailability = (timeStr, courtId) => {
-        // Crée des dates de début et de fin pour ce créneau de 1 heure
         const slotStart = new Date(`${bookingDate}T${timeStr}:00`);
         const slotEnd = new Date(slotStart.getTime() + 60 * 60 * 1000);
 
-        // Vérifie si une réservation active chevauche
         return !bookings.some(b => {
             if (b.court_id !== courtId || b.status === 'cancelled') return false;
             const bStart = new Date(b.start_time);
@@ -324,6 +365,10 @@ const ClubDetail = ({ session }) => {
 
     const handleSelectSlot = (timeStr, court) => {
         setSelectedSlot({ time: timeStr, court });
+        setPlayersCount(court.sport === 'Pickleball' ? 2 : 4);
+        setRentRacketsCount(0);
+        setBuyBallsCount(0);
+        setPublishAnnouncement(false);
         setShowConfirmBookingModal(true);
     };
 
@@ -337,6 +382,44 @@ const ClubDetail = ({ session }) => {
         const slotStart = new Date(`${bookingDate}T${selectedSlot.time}:00`);
         const slotEnd = new Date(slotStart.getTime() + 60 * 60 * 1000);
 
+        // Fetch prices from current club settings
+        const rPrice = club?.racket_rental_price !== undefined ? parseFloat(club.racket_rental_price) : 5.00;
+        const bPrice = club?.ball_sale_price !== undefined ? parseFloat(club.ball_sale_price) : 6.00;
+        const finalPrice = parseFloat(selectedSlot.court.hourly_rate) + (rentRacketsCount * rPrice) + (buyBallsCount * bPrice);
+
+        // 1. Optional match announcement publishing
+        let matchId = null;
+        if (publishAnnouncement) {
+            try {
+                // Fetch player's level from profiles
+                const { data: profile } = await supabase.from('profiles').select('level').eq('id', session.user.id).single();
+                const level = profile?.level || 'Intermédiaire';
+
+                const { data: newMatch, error: matchErr } = await supabase
+                    .from('matches')
+                    .insert([{
+                        creator_id: session.user.id,
+                        date: bookingDate,
+                        time: selectedSlot.time + ':00',
+                        location: club.name,
+                        type: playersCount === 2 ? 'Simple' : 'Double',
+                        category: level,
+                        status: 'open',
+                        requires_approval: false
+                    }])
+                    .select()
+                    .single();
+                
+                if (matchErr) throw matchErr;
+                if (newMatch) {
+                    matchId = newMatch.id;
+                }
+            } catch (err) {
+                console.warn("Matchmaking table insertion failed (either matches does not exist or network error). Skipping.", err.message);
+            }
+        }
+
+        // 2. Perform booking insertion
         try {
             const { data, error } = await supabase
                 .from('bookings')
@@ -346,30 +429,38 @@ const ClubDetail = ({ session }) => {
                     client_name: session.user.email.split('@')[0],
                     start_time: slotStart.toISOString(),
                     end_time: slotEnd.toISOString(),
-                    total_price: selectedSlot.court.hourly_rate,
-                    payment_status: 'paid', // Simulate pre-paid
-                    status: 'confirmed'
+                    total_price: finalPrice,
+                    payment_status: 'paid', // Simulate paid
+                    status: 'confirmed',
+                    players_count: playersCount,
+                    rented_rackets_count: rentRacketsCount,
+                    rented_balls_count: buyBallsCount,
+                    publish_announcement: publishAnnouncement
                 }])
                 .select()
                 .single();
             
             if (error) throw error;
             setBookings([...bookings, data]);
-            alert("Réservation confirmée avec succès ! 🎾");
+            alert(publishAnnouncement ? "Réservation et annonce publiées avec succès ! 🎾" : "Réservation confirmée avec succès ! 🎾");
         } catch (err) {
-            console.warn("Table insert failed, simulating confirmation", err.message);
+            console.warn("Table insert failed, simulating confirmation locally", err.message);
             const mockNewBooking = {
                 id: 'mb-' + Math.random(),
                 court_id: selectedSlot.court.id,
                 client_name: session.user.email ? session.user.email.split('@')[0] : 'Client',
                 start_time: slotStart.toISOString(),
                 end_time: slotEnd.toISOString(),
-                total_price: selectedSlot.court.hourly_rate,
+                total_price: finalPrice,
                 payment_status: 'paid',
-                status: 'confirmed'
+                status: 'confirmed',
+                players_count: playersCount,
+                rented_rackets_count: rentRacketsCount,
+                rented_balls_count: buyBallsCount,
+                publish_announcement: publishAnnouncement
             };
             setBookings([...bookings, mockNewBooking]);
-            alert("Réservation confirmée (Simulation) ! 🎾");
+            alert(publishAnnouncement ? "Réservation confirmée (Simulation) & Annonce publiée sur le circuit ! 🎾" : "Réservation confirmée (Simulation) ! 🎾");
         } finally {
             setShowConfirmBookingModal(false);
             setSelectedSlot(null);
@@ -408,6 +499,16 @@ const ClubDetail = ({ session }) => {
     const filteredBookings = bookings.filter(b => 
         b.client_name.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    // Fallback variables for options configuration
+    const racketRentalEnabled = club?.has_racket_rental !== undefined ? club.has_racket_rental : true;
+    const ballSaleEnabled = club?.has_ball_sale !== undefined ? club.has_ball_sale : true;
+    const racketPrice = club?.racket_rental_price !== undefined ? parseFloat(club.racket_rental_price) : 5.00;
+    const ballPrice = club?.ball_sale_price !== undefined ? parseFloat(club.ball_sale_price) : 6.00;
+
+    const checkoutFinalPrice = selectedSlot 
+        ? parseFloat(selectedSlot.court.hourly_rate) + (rentRacketsCount * racketPrice) + (buyBallsCount * ballPrice)
+        : 0;
 
     if (loading) return (
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -733,6 +834,76 @@ const ClubDetail = ({ session }) => {
                             </div>
                         </div>
 
+                        {/* 3.1.5 Club Equipment configuration panel */}
+                        <div className="bg-white rounded-[3rem] p-8 border border-sport-sand shadow-sm space-y-6">
+                            <h2 className="text-[10px] font-black text-sport-green uppercase tracking-[0.2em] flex items-center">
+                                <Settings size={14} className="mr-1.5" />
+                                Paramètres Tarifs & Matériel du Club
+                            </h2>
+                            <form onSubmit={handleUpdateClubEquipment} className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                                <div className="space-y-4 p-4 bg-sport-sky/20 rounded-2xl border border-sport-sand/60">
+                                    <div className="flex items-center justify-between">
+                                        <label htmlFor="has_racket_rental" className="text-xs font-bold text-sport-navy cursor-pointer">
+                                            🏸 Autoriser la location de raquettes
+                                        </label>
+                                        <input
+                                            type="checkbox"
+                                            id="has_racket_rental"
+                                            checked={editClubEquipment.has_racket_rental}
+                                            onChange={e => setEditClubEquipment({ ...editClubEquipment, has_racket_rental: e.target.checked })}
+                                            className="w-5 h-5 text-sport-green border-sport-sand rounded focus:ring-sport-green"
+                                        />
+                                    </div>
+                                    {editClubEquipment.has_racket_rental && (
+                                        <div>
+                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Prix de location par raquette (€)</label>
+                                            <input
+                                                type="number" step="0.5" min="0" required
+                                                value={editClubEquipment.racket_rental_price}
+                                                onChange={e => setEditClubEquipment({ ...editClubEquipment, racket_rental_price: e.target.value })}
+                                                className="w-full px-4 py-2.5 bg-white border border-sport-sand rounded-xl text-xs font-bold text-sport-navy"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-4 p-4 bg-sport-sky/20 rounded-2xl border border-sport-sand/60">
+                                    <div className="flex items-center justify-between">
+                                        <label htmlFor="has_ball_sale" className="text-xs font-bold text-sport-navy cursor-pointer">
+                                            🟡 Autoriser la vente de balles
+                                        </label>
+                                        <input
+                                            type="checkbox"
+                                            id="has_ball_sale"
+                                            checked={editClubEquipment.has_ball_sale}
+                                            onChange={e => setEditClubEquipment({ ...editClubEquipment, has_ball_sale: e.target.checked })}
+                                            className="w-5 h-5 text-sport-green border-sport-sand rounded focus:ring-sport-green"
+                                        />
+                                    </div>
+                                    {editClubEquipment.has_ball_sale && (
+                                        <div>
+                                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Prix de vente tube de balles (€)</label>
+                                            <input
+                                                type="number" step="0.5" min="0" required
+                                                value={editClubEquipment.ball_sale_price}
+                                                onChange={e => setEditClubEquipment({ ...editClubEquipment, ball_sale_price: e.target.value })}
+                                                className="w-full px-4 py-2.5 bg-white border border-sport-sand rounded-xl text-xs font-bold text-sport-navy"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="md:col-span-2 flex justify-end">
+                                    <button 
+                                        type="submit"
+                                        className="px-6 py-3 bg-sport-navy text-white text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-sport-green active:scale-95 transition-all shadow-md"
+                                    >
+                                        Enregistrer les paramètres matériel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
                         {/* 3.2 Dynamic Terrains Grid */}
                         <div className="bg-white rounded-[3rem] p-8 border border-sport-sand shadow-sm space-y-6">
                             <div className="flex justify-between items-center">
@@ -1025,7 +1196,7 @@ const ClubDetail = ({ session }) => {
             {/* CONFIRM BOOKING MODAL (CLIENT) */}
             {showConfirmBookingModal && selectedSlot && (
                 <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-4 bg-sport-navy/60 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="w-full max-w-md bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-white/20">
+                    <div className="w-full max-w-md bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-white/20 max-h-[90vh] overflow-y-auto">
                         <div className="p-6 bg-sport-navy text-white flex justify-between items-center">
                             <div>
                                 <h3 className="font-bold text-sm tracking-tight flex items-center space-x-2">
@@ -1037,36 +1208,113 @@ const ClubDetail = ({ session }) => {
                             <button onClick={() => setShowConfirmBookingModal(false)} className="p-2.5 bg-white/10 hover:bg-white/20 rounded-2xl text-white">✕</button>
                         </div>
                         <div className="p-8 space-y-6">
-                            <div className="bg-sport-sky/30 p-5 rounded-[2rem] border border-sport-sand space-y-3">
-                                <div className="flex justify-between text-xs font-bold text-slate-400">
-                                    <span>Club</span>
-                                    <span className="text-sport-navy uppercase">{club.name}</span>
+                            
+                            {/* Option 1: Players Count Selection */}
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Configuration du Match</label>
+                                <div className="flex bg-sport-sky/20 p-1 rounded-2xl border border-sport-sand">
+                                    <button 
+                                        onClick={() => setPlayersCount(2)}
+                                        className={`flex-1 py-3 rounded-xl text-[10px] font-bold transition-all uppercase tracking-widest ${playersCount === 2 ? 'bg-sport-navy text-white shadow-md' : 'text-slate-400'}`}
+                                    >
+                                        Simple (1 vs 1)
+                                    </button>
+                                    <button 
+                                        onClick={() => setPlayersCount(4)}
+                                        className={`flex-1 py-3 rounded-xl text-[10px] font-bold transition-all uppercase tracking-widest ${playersCount === 4 ? 'bg-sport-navy text-white shadow-md' : 'text-slate-400'}`}
+                                    >
+                                        Double (2 vs 2)
+                                    </button>
                                 </div>
-                                <div className="flex justify-between text-xs font-bold text-slate-400">
-                                    <span>Terrain</span>
-                                    <span className="text-sport-navy">{selectedSlot.court.name}</span>
+                            </div>
+
+                            {/* Option 2: Rackets Rental Selector (Only if supported by club) */}
+                            {racketRentalEnabled && (
+                                <div className="space-y-2 p-4 bg-sport-sky/20 rounded-2xl border border-sport-sand">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-xs font-bold text-sport-navy">🏸 Louer des Raquettes (+{racketPrice}€/unité)</span>
+                                        <select 
+                                            value={rentRacketsCount}
+                                            onChange={e => setRentRacketsCount(parseInt(e.target.value))}
+                                            className="p-2 bg-white border border-sport-sand rounded-xl text-xs font-bold text-sport-navy focus:outline-none"
+                                        >
+                                            <option value="0">0 raquette</option>
+                                            <option value="1">1 raquette</option>
+                                            <option value="2">2 raquettes</option>
+                                            <option value="3">3 raquettes</option>
+                                            <option value="4">4 raquettes</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between text-xs font-bold text-slate-400">
-                                    <span>Créneau</span>
-                                    <span className="text-sport-navy">Le {new Date(bookingDate).toLocaleDateString('fr-FR', {day: 'numeric', month: 'long'})} à {selectedSlot.time}</span>
+                            )}
+
+                            {/* Option 3: Ball Sales Selector (Only if supported by club) */}
+                            {ballSaleEnabled && (
+                                <div className="space-y-2 p-4 bg-sport-sky/20 rounded-2xl border border-sport-sand">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-xs font-bold text-sport-navy">🟡 Acheter des Balles (+{ballPrice}€/tube)</span>
+                                        <select 
+                                            value={buyBallsCount}
+                                            onChange={e => setBuyBallsCount(parseInt(e.target.value))}
+                                            className="p-2 bg-white border border-sport-sand rounded-xl text-xs font-bold text-sport-navy focus:outline-none"
+                                        >
+                                            <option value="0">0 tube</option>
+                                            <option value="1">1 tube</option>
+                                            <option value="2">2 tubes</option>
+                                            <option value="3">3 tubes</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between text-xs font-bold text-slate-400 pt-2 border-t border-sport-sand/40">
-                                    <span>Tarif Horaire</span>
-                                    <span className="text-sport-navy">{selectedSlot.court.hourly_rate}€</span>
+                            )}
+
+                            {/* Option 4: Publish matchmaking announcement toggle */}
+                            <div className="flex items-center space-x-3.5 bg-sport-sky/10 p-4 rounded-2xl border border-sport-sand shadow-inner">
+                                <input
+                                    type="checkbox"
+                                    id="publish_announcement"
+                                    checked={publishAnnouncement}
+                                    onChange={e => setPublishAnnouncement(e.target.checked)}
+                                    className="w-5 h-5 text-sport-green border-sport-sand rounded focus:ring-sport-green focus:ring-2 focus:ring-offset-2 cursor-pointer"
+                                />
+                                <label htmlFor="publish_announcement" className="text-[11px] font-bold text-sport-navy cursor-pointer select-none leading-relaxed">
+                                    📢 Publier une recherche de partenaires sur l'application (Matchmaking ouvert)
+                                </label>
+                            </div>
+
+                            {/* Summary Detail Card */}
+                            <div className="bg-sport-navy p-6 rounded-[2rem] text-white space-y-3 shadow-inner">
+                                <div className="flex justify-between text-[10px] font-bold text-white/50 uppercase tracking-widest">
+                                    <span>Terrain ({selectedSlot.court.name})</span>
+                                    <span>{selectedSlot.court.hourly_rate}€</span>
                                 </div>
-                                <div className="flex justify-between text-sm font-black text-sport-navy pt-2">
-                                    <span>Montant Total</span>
-                                    <span className="text-sport-green">{selectedSlot.court.hourly_rate}€</span>
+                                
+                                {rentRacketsCount > 0 && (
+                                    <div className="flex justify-between text-[10px] font-bold text-white/50 uppercase tracking-widest">
+                                        <span>Location Raquettes ({rentRacketsCount})</span>
+                                        <span>+{rentRacketsCount * racketPrice}€</span>
+                                    </div>
+                                )}
+
+                                {buyBallsCount > 0 && (
+                                    <div className="flex justify-between text-[10px] font-bold text-white/50 uppercase tracking-widest">
+                                        <span>Achat Balles ({buyBallsCount})</span>
+                                        <span>+{buyBallsCount * ballPrice}€</span>
+                                    </div>
+                                )}
+
+                                <div className="flex justify-between text-xs font-black pt-3 border-t border-white/10">
+                                    <span>TOTAL À REGLER</span>
+                                    <span className="text-sport-green text-sm">{checkoutFinalPrice}€</span>
                                 </div>
                             </div>
                             
-                            <p className="text-[10px] text-slate-400 italic text-center">En confirmant, vous acceptez les conditions de réservation du club.</p>
+                            <p className="text-[9px] text-slate-400 italic text-center">Paiement fictif pour le circuit compétitif PicklePock.</p>
 
                             <button 
                                 onClick={handleConfirmBooking}
                                 className="w-full py-5 bg-sport-green text-white rounded-[2rem] font-bold text-xs uppercase tracking-[0.2em] shadow-xl shadow-sport-green/20 hover:scale-105 transition-all"
                             >
-                                Payer & Confirmer
+                                Valider & Réserver
                             </button>
                         </div>
                     </div>

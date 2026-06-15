@@ -107,3 +107,20 @@ BEGIN
         END IF;
     END LOOP;
 END $$;
+
+-- ============================================================
+-- MIGRATION - Nouvelles options clubs & réservations
+-- ============================================================
+
+-- 1. Options d'équipements pour les clubs
+ALTER TABLE public.clubs ADD COLUMN IF NOT EXISTS has_racket_rental BOOLEAN DEFAULT TRUE;
+ALTER TABLE public.clubs ADD COLUMN IF NOT EXISTS has_ball_sale BOOLEAN DEFAULT TRUE;
+ALTER TABLE public.clubs ADD COLUMN IF NOT EXISTS racket_rental_price DECIMAL(10,2) DEFAULT 5.00;
+ALTER TABLE public.clubs ADD COLUMN IF NOT EXISTS ball_sale_price DECIMAL(10,2) DEFAULT 6.00;
+
+-- 2. Options de réservation clients
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS players_count INTEGER DEFAULT 2;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS rented_rackets_count INTEGER DEFAULT 0;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS rented_balls_count INTEGER DEFAULT 0;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS publish_announcement BOOLEAN DEFAULT FALSE;
+
