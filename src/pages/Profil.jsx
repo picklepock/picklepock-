@@ -809,52 +809,76 @@ const Profil = ({ session }) => {
         if (!window.confirm(`Approuver officiellement le club "${req.club_name}" ?`)) return;
 
         try {
-            // Géolocalisation de l'adresse via Nominatim d'OpenStreetMap
+            // Géolocalisation de l'adresse
             let latitude = 46.2276;
             let longitude = 2.2137;
             
-            const queryParts = [];
-            if (req.address) queryParts.push(req.address);
-            if (req.city) queryParts.push(req.city);
-            if (req.country) queryParts.push(req.country);
-            const searchQuery = queryParts.join(', ');
+            const isFrance = !req.country || req.country.toLowerCase().includes('fra');
+            let geocodeSuccess = false;
 
-            if (searchQuery) {
+            if (isFrance) {
                 try {
-                    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=1`, {
-                        headers: {
-                            'User-Agent': 'PicklePock/1.0'
+                    // 1. Tenter le géocodeur officiel français (CORS-friendly, rapide et précis)
+                    const searchString = `${req.address || ''} ${req.city || ''}`.trim();
+                    if (searchString) {
+                        const response = await fetch(`https://data.geopf.fr/geocodage/search/?q=${encodeURIComponent(searchString)}&limit=1`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data && data.features && data.features.length > 0) {
+                                const coords = data.features[0].geometry.coordinates;
+                                longitude = coords[0];
+                                latitude = coords[1];
+                                geocodeSuccess = true;
+                                console.log("Géocodage réussi via Geopf:", latitude, longitude);
+                            }
                         }
-                    });
-                    if (response.ok) {
-                        const results = await response.json();
-                        if (results && results.length > 0) {
-                            latitude = parseFloat(results[0].lat);
-                            longitude = parseFloat(results[0].lon);
-                        } else {
-                            // Recherche de repli (Fallback) uniquement sur ville et pays si l'adresse complète échoue
-                            const fallbackParts = [];
-                            if (req.city) fallbackParts.push(req.city);
-                            if (req.country) fallbackParts.push(req.country);
-                            const fallbackQuery = fallbackParts.join(', ');
-                            if (fallbackQuery && fallbackQuery !== searchQuery) {
-                                const fallbackResponse = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fallbackQuery)}&format=json&limit=1`, {
-                                    headers: {
-                                        'User-Agent': 'PicklePock/1.0'
-                                    }
-                                });
-                                if (fallbackResponse.ok) {
-                                    const fallbackResults = await fallbackResponse.json();
-                                    if (fallbackResults && fallbackResults.length > 0) {
-                                        latitude = parseFloat(fallbackResults[0].lat);
-                                        longitude = parseFloat(fallbackResults[0].lon);
+                    }
+                } catch (err) {
+                    console.error("Échec du géocodage Geopf, tentative de repli:", err);
+                }
+            }
+
+            if (!geocodeSuccess) {
+                // 2. Repli mondial via Nominatim (sans en-tête personnalisé pour éviter les erreurs CORS de pré-vérification)
+                const queryParts = [];
+                if (req.address) queryParts.push(req.address);
+                if (req.city) queryParts.push(req.city);
+                if (req.country) queryParts.push(req.country);
+                const searchQuery = queryParts.join(', ');
+
+                if (searchQuery) {
+                    try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=1`);
+                        if (response.ok) {
+                            const results = await response.json();
+                            if (results && results.length > 0) {
+                                latitude = parseFloat(results[0].lat);
+                                longitude = parseFloat(results[0].lon);
+                                geocodeSuccess = true;
+                                console.log("Géocodage réussi via Nominatim:", latitude, longitude);
+                            } else {
+                                // Recherche Nominatim plus large (ville, pays)
+                                const fallbackParts = [];
+                                if (req.city) fallbackParts.push(req.city);
+                                if (req.country) fallbackParts.push(req.country);
+                                const fallbackQuery = fallbackParts.join(', ');
+                                if (fallbackQuery && fallbackQuery !== searchQuery) {
+                                    const fallbackResponse = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fallbackQuery)}&format=json&limit=1`);
+                                    if (fallbackResponse.ok) {
+                                        const fallbackResults = await fallbackResponse.json();
+                                        if (fallbackResults && fallbackResults.length > 0) {
+                                            latitude = parseFloat(fallbackResults[0].lat);
+                                            longitude = parseFloat(fallbackResults[0].lon);
+                                            geocodeSuccess = true;
+                                            console.log("Géocodage de secours réussi via Nominatim:", latitude, longitude);
+                                        }
                                     }
                                 }
                             }
                         }
+                    } catch (geocodeError) {
+                        console.error("Erreur de géocodage Nominatim:", geocodeError);
                     }
-                } catch (geocodeError) {
-                    console.error("Erreur de géocodage, utilisation des coordonnées par défaut :", geocodeError);
                 }
             }
 
