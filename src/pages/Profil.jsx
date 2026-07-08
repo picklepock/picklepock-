@@ -809,6 +809,55 @@ const Profil = ({ session }) => {
         if (!window.confirm(`Approuver officiellement le club "${req.club_name}" ?`)) return;
 
         try {
+            // Géolocalisation de l'adresse via Nominatim d'OpenStreetMap
+            let latitude = 46.2276;
+            let longitude = 2.2137;
+            
+            const queryParts = [];
+            if (req.address) queryParts.push(req.address);
+            if (req.city) queryParts.push(req.city);
+            if (req.country) queryParts.push(req.country);
+            const searchQuery = queryParts.join(', ');
+
+            if (searchQuery) {
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=1`, {
+                        headers: {
+                            'User-Agent': 'PicklePock/1.0'
+                        }
+                    });
+                    if (response.ok) {
+                        const results = await response.json();
+                        if (results && results.length > 0) {
+                            latitude = parseFloat(results[0].lat);
+                            longitude = parseFloat(results[0].lon);
+                        } else {
+                            // Recherche de repli (Fallback) uniquement sur ville et pays si l'adresse complète échoue
+                            const fallbackParts = [];
+                            if (req.city) fallbackParts.push(req.city);
+                            if (req.country) fallbackParts.push(req.country);
+                            const fallbackQuery = fallbackParts.join(', ');
+                            if (fallbackQuery && fallbackQuery !== searchQuery) {
+                                const fallbackResponse = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fallbackQuery)}&format=json&limit=1`, {
+                                    headers: {
+                                        'User-Agent': 'PicklePock/1.0'
+                                    }
+                                });
+                                if (fallbackResponse.ok) {
+                                    const fallbackResults = await fallbackResponse.json();
+                                    if (fallbackResults && fallbackResults.length > 0) {
+                                        latitude = parseFloat(fallbackResults[0].lat);
+                                        longitude = parseFloat(fallbackResults[0].lon);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (geocodeError) {
+                    console.error("Erreur de géocodage, utilisation des coordonnées par défaut :", geocodeError);
+                }
+            }
+
             // 1. Créer le club
             const { data: newClub, error: clubError } = await supabase
                 .from('clubs')
@@ -823,8 +872,8 @@ const Profil = ({ session }) => {
                     opening_hours: req.opening_hours,
                     manager_id: req.user_id,
                     contact_email: req.contact_email,
-                    latitude: 46.2276, 
-                    longitude: 2.2137,
+                    latitude: latitude, 
+                    longitude: longitude,
                     is_active: true
                 }])
                 .select()
