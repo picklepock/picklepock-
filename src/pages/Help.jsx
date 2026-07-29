@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { HelpCircle, Send, MessageSquare, ShieldAlert, ArrowRight, Clock, CheckCircle2, MessageCircle } from 'lucide-react';
+import { HelpCircle, Send, MessageSquare, ShieldAlert, ArrowRight, Clock, CheckCircle2, MessageCircle, Wrench, Trophy, Shield, MessageCircle as ChatIcon } from 'lucide-react';
 
 const Help = ({ session }) => {
     const [activeTab, setActiveTab] = useState('new'); // 'new' or 'history'
@@ -15,10 +15,10 @@ const Help = ({ session }) => {
     const [replies, setReplies] = useState([]);
 
     const categories = [
-        { id: 'Technique', icon: '🛠️', label: 'Problème technique' },
-        { id: 'Classement', icon: '🏆', label: 'Compétition' },
-        { id: 'Signalement', icon: '🛡️', label: 'Signalement' },
-        { id: 'Général', icon: '💬', label: 'Autre' }
+        { id: 'Technique',   Icon: Wrench,   label: 'Problème technique', color: '#3b82f6' },
+        { id: 'Classement',  Icon: Trophy,   label: 'Compétition',        color: 'var(--lime-dim)' },
+        { id: 'Signalement', Icon: Shield,   label: 'Signalement',         color: '#f43f5e' },
+        { id: 'Général',     Icon: ChatIcon, label: 'Autre',               color: '#8b5cf6' }
     ];
 
     useEffect(() => {
@@ -146,7 +146,10 @@ const Help = ({ session }) => {
                                                 : 'bg-white border-sport-sand text-sport-navy hover:border-sport-green/50 opacity-70 hover:opacity-100 shadow-sm'
                                                 }`}
                                         >
-                                            <span className="block text-2xl mb-2 group-hover:scale-110 transition-transform">{cat.icon}</span>
+                                            <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-transform group-hover:scale-110"
+                                                style={{background: category === cat.id ? 'rgba(255,255,255,0.15)' : `${cat.color}15`, border:`1px solid ${category === cat.id ? 'rgba(255,255,255,0.2)' : `${cat.color}25`}`}}>
+                                                <cat.Icon size={20} style={{color: category === cat.id ? 'white' : cat.color}} strokeWidth={1.8} />
+                                            </div>
                                             <span className="text-[10px] font-black uppercase tracking-widest leading-none">{cat.label}</span>
                                         </button>
                                     ))}

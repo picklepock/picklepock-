@@ -1442,8 +1442,8 @@ const Profil = ({ session }) => {
                                 {profile?.region || 'National'}
                             </span>
                             {profile?.country && (
-                                <span className="px-5 py-2 bg-white text-sport-navy text-[10px] font-bold rounded-xl uppercase tracking-widest border border-sport-sand shadow-sm">
-                                    📍 {profile.country}
+                                <span className="px-5 py-2 bg-white text-sport-navy text-[10px] font-bold rounded-xl uppercase tracking-widest border border-sport-sand shadow-sm flex items-center gap-1">
+                                    <MapPin size={11} className="text-slate-400" /> {profile.country}
                                 </span>
                             )}
                             {profile?.role === 'admin' && (

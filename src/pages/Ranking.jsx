@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Trophy, MapPin, Award, Search, Filter } from 'lucide-react';
+import { Trophy, MapPin, Award, Search, Filter, Medal } from 'lucide-react';
 
 const Ranking = () => {
     const [players, setPlayers] = useState([]);
@@ -68,7 +68,10 @@ const Ranking = () => {
                                         pos === 3 ? 'bg-orange-100 text-orange-600' :
                                             'bg-sport-beige text-slate-400'
                                     }`}>
-                                    {pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : `#${pos}`}
+                                    {pos === 1 ? <Trophy size={20} className="text-amber-400" strokeWidth={2.5} /> :
+                                     pos === 2 ? <Medal size={20} className="text-slate-400" strokeWidth={2.5} /> :
+                                     pos === 3 ? <Award size={20} className="text-orange-400" strokeWidth={2.5} /> :
+                                     <span className="text-xs font-black">#{pos}</span>}
                                 </div>
 
                                 <div className="flex-1 flex items-center space-x-5">
@@ -102,7 +105,9 @@ const Ranking = () => {
                 </div>
             ) : (
                 <div className="flex flex-col items-center justify-center py-24 text-center space-y-6 animate-in zoom-in duration-500">
-                    <div className="w-24 h-24 bg-sport-beige rounded-[3rem] flex items-center justify-center text-4xl opacity-30 shadow-inner border border-sport-sand">🏅</div>
+                    <div className="w-24 h-24 bg-sport-beige rounded-[3rem] flex items-center justify-center opacity-30 shadow-inner border border-sport-sand">
+                        <Medal size={40} className="text-sport-navy" strokeWidth={1.5} />
+                    </div>
                     <div>
                         <h2 className="text-xl font-bold text-sport-navy">Pas encore de classement</h2>
                         <p className="text-slate-400 text-sm max-w-[220px] mx-auto mt-2 italic font-medium opacity-60">Les premiers matchs créeront le circuit officiel.</p>

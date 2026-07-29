@@ -576,8 +576,8 @@ const Matches = ({ session }) => {
                                     onChange={e => setMatchData({ ...matchData, requires_approval: e.target.checked })}
                                     className="w-5 h-5 text-sport-green border-sport-sand rounded focus:ring-sport-green focus:ring-2 focus:ring-offset-2 cursor-pointer"
                                 />
-                                <label htmlFor="requires_approval" className="text-xs font-bold text-sport-navy cursor-pointer select-none">
-                                    🔒 Approbation requise pour rejoindre ce match
+                                <label htmlFor="requires_approval" className="text-xs font-bold text-sport-navy cursor-pointer select-none flex items-center gap-1.5">
+                                    <Lock size={13} strokeWidth={2.5} className="text-sport-navy/50" /> Approbation requise pour rejoindre ce match
                                 </label>
                             </div>
 

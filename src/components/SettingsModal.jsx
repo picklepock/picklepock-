@@ -44,7 +44,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
     };
 
     const handleDeleteAccount = async () => {
-        if (window.confirm("⚠️ Attention : La suppression du compte est définitive. Voulez-vous continuer ?")) {
+        if (window.confirm("ATTENTION : La suppression du compte est définitive et irréversible. Voulez-vous continuer ?")) {
             // Note: Normalement géré par une fonction SQL ou un endpoint admin Supabase.
             const user = (await supabase.auth.getUser()).data.user;
             if (user) {

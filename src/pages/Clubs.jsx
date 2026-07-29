@@ -286,7 +286,7 @@ const Clubs = ({ session }) => {
                             className="flex items-center p-5 bg-white border border-sport-sand rounded-[2rem] shadow-sm hover:border-sport-mint/30 transition-all cursor-pointer group"
                         >
                             <div className="w-14 h-14 rounded-2xl bg-sport-navy flex items-center justify-center text-white mr-5 overflow-hidden shadow-inner group-hover:scale-105 transition-transform">
-                                {club.logo_url ? <img src={club.logo_url} className="w-full h-full object-cover" /> : "🎾"}
+                                {club.logo_url ? <img src={club.logo_url} className="w-full h-full object-cover" /> : <Compass size={22} className="text-white/60" strokeWidth={1.5} />}
                             </div>
                             <div className="flex-1">
                                 <p className="font-black text-sport-navy text-lg leading-tight">{club.name}</p>
