@@ -597,11 +597,15 @@ const ClubDetail = ({ session }) => {
     const todayStr = new Date().toISOString().split('T')[0];
     const todayRevenue = bookings
         .filter(b => {
-            if (b.status === 'cancelled') return false;
-            const bDateStr = new Date(b.start_time).toISOString().split('T')[0];
-            return bDateStr === todayStr;
+            if (b.status === 'cancelled' || !b.start_time) return false;
+            try {
+                const bDateStr = new Date(b.start_time).toISOString().split('T')[0];
+                return bDateStr === todayStr;
+            } catch (e) {
+                return false;
+            }
         })
-        .reduce((sum, b) => sum + parseFloat(b.total_price), 0);
+        .reduce((sum, b) => sum + (parseFloat(b.total_price) || 0), 0);
 
     // Filtered bookings for datatable
     const filteredBookings = bookings.filter(b => 
@@ -1155,9 +1159,11 @@ const ClubDetail = ({ session }) => {
                             <div className="space-y-2">
                                 {filteredBookings.length > 0 ? filteredBookings.map(b => {
                                     const court = courts.find(c => c.id === b.court_id);
-                                    const startStr = new Date(b.start_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                                    const endStr = new Date(b.end_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                                    const dateStr = new Date(b.start_time).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+                                    const startDate = b.start_time ? new Date(b.start_time) : new Date();
+                                    const endDate = b.end_time ? new Date(b.end_time) : new Date();
+                                    const startStr = !isNaN(startDate) ? startDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+                                    const endStr = !isNaN(endDate) ? endDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+                                    const dateStr = !isNaN(startDate) ? startDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : 'Aujourd\'hui';
                                     const isPaid = b.payment_status === 'paid';
 
                                     return (
