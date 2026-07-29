@@ -992,21 +992,29 @@ const ClubDetail = ({ session }) => {
                                                     )}
                                                     
                                                     {/* Court Actions */}
-                                                    <button onClick={() => setEditingCourt({...court})} 
-                                                        title="Modifier le terrain"
-                                                        className="p-1.5 rounded-lg text-slate-400 hover:text-sport-navy dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/10 transition-all">
-                                                        <Settings size={12} />
-                                                    </button>
-                                                    <button onClick={() => handleToggleCourtMaintenance(court)}
-                                                        title={court.status === 'maintenance' ? "Rendre disponible" : "Mettre en maintenance"}
-                                                        className={`p-1.5 rounded-lg text-xs font-black transition-all ${court.status === 'maintenance' ? 'text-amber-500 bg-amber-500/10' : 'text-slate-400 hover:text-amber-500'}`}>
-                                                        <Clock size={12} />
-                                                    </button>
-                                                    <button onClick={() => handleRemoveCourt(court.id)} 
-                                                        title="Supprimer"
-                                                        className="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/10 transition-all">
-                                                        <Trash2 size={12} />
-                                                    </button>
+                                                    <div className="flex items-center gap-1.5 ml-2">
+                                                        <button onClick={() => setEditingCourt({...court})} 
+                                                            title="Modifier le terrain"
+                                                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider text-slate-700 bg-slate-100 hover:bg-slate-200 dark:text-white dark:bg-white/10 dark:hover:bg-white/20 transition-all">
+                                                            <Settings size={12} />
+                                                            <span>Éditer</span>
+                                                        </button>
+                                                        <button onClick={() => handleToggleCourtMaintenance(court)}
+                                                            title={court.status === 'maintenance' ? "Rendre disponible" : "Mettre en maintenance"}
+                                                            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all ${
+                                                                court.status === 'maintenance' 
+                                                                    ? 'bg-amber-500 text-white shadow-sm' 
+                                                                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20'
+                                                            }`}>
+                                                            <Clock size={12} />
+                                                            <span>{court.status === 'maintenance' ? 'Disponible' : 'Pause'}</span>
+                                                        </button>
+                                                        <button onClick={() => handleRemoveCourt(court.id)} 
+                                                            title="Supprimer"
+                                                            className="p-1.5 rounded-xl text-rose-500 hover:bg-rose-500/10 transition-all">
+                                                            <Trash2 size={13} />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
 
