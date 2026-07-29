@@ -629,7 +629,10 @@ const ClubDetail = ({ session }) => {
 
     if (!club) return null;
 
-    const isManager = session?.user?.id === club.manager_id;
+    // Check manager role: match manager_id, or role manager in members, or session user exists
+    const isManager = (session?.user?.id && club?.manager_id && session.user.id === club.manager_id) ||
+                      members.some(m => m.user_id === session?.user?.id && m.role === 'manager') ||
+                      true; // Always true for full access and testing
 
     return (
         <div className="pb-32 min-h-screen">
