@@ -112,7 +112,21 @@ CREATE POLICY "Lecture de ses propres notifications" ON public.notifications
 
 DROP POLICY IF EXISTS "Création de notifications" ON public.notifications;
 CREATE POLICY "Création de notifications" ON public.notifications
-    FOR INSERT WITH CHECK (auth.uid() = actor_id OR auth.uid() IS NOT NULL);
+    FOR INSERT WITH CHECK (
+        auth.uid() = actor_id
+        AND (
+            (
+                type IN ('join_request', 'join_confirmed', 'leave_match')
+                AND EXISTS (SELECT 1 FROM public.matches m WHERE m.id = notifications.match_id AND m.creator_id = notifications.user_id)
+                AND EXISTS (SELECT 1 FROM public.match_participants p WHERE p.match_id = notifications.match_id AND p.user_id = auth.uid())
+            )
+            OR (
+                type IN ('request_approved', 'request_rejected')
+                AND EXISTS (SELECT 1 FROM public.matches m WHERE m.id = notifications.match_id AND m.creator_id = auth.uid())
+                AND EXISTS (SELECT 1 FROM public.match_participants p WHERE p.match_id = notifications.match_id AND p.user_id = notifications.user_id)
+            )
+        )
+    );
 
 DROP POLICY IF EXISTS "Mise à jour de ses propres notifications" ON public.notifications;
 CREATE POLICY "Mise à jour de ses propres notifications" ON public.notifications
@@ -124,6 +138,7 @@ CREATE OR REPLACE FUNCTION public.on_match_created()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 BEGIN
     INSERT INTO public.match_participants (match_id, user_id, status, team)
@@ -158,12 +173,21 @@ CREATE OR REPLACE FUNCTION public.report_match_score(
 RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
     player_id UUID;
     m_creator_id UUID;
     p_username TEXT;
 BEGIN
+    IF auth.uid() IS NULL OR reporter_uuid IS DISTINCT FROM auth.uid() THEN
+        RAISE EXCEPTION 'Invalid reporter identity.';
+    END IF;
+
+    IF score_a < 0 OR score_b < 0 OR score_a > 100 OR score_b > 100 THEN
+        RAISE EXCEPTION 'Invalid score.';
+    END IF;
+
     -- 1. Récupérer les détails du match
     SELECT creator_id INTO m_creator_id
     FROM public.matches WHERE id = match_uuid;
@@ -227,6 +251,7 @@ CREATE OR REPLACE FUNCTION public.validate_match_score(
 RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
     m_score_team_a INT;
@@ -238,6 +263,10 @@ DECLARE
     is_win BOOLEAN;
     v_username TEXT;
 BEGIN
+    IF auth.uid() IS NULL OR validator_uuid IS DISTINCT FROM auth.uid() THEN
+        RAISE EXCEPTION 'Invalid validator identity.';
+    END IF;
+
     -- 1. Récupérer les détails du match
     SELECT score_team_a, score_team_b, score_reporter_id 
     INTO m_score_team_a, m_score_team_b, m_score_reporter_id
@@ -326,6 +355,7 @@ CREATE OR REPLACE FUNCTION public.reject_match_score(
 RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
     m_score_reporter_id UUID;
@@ -333,6 +363,10 @@ DECLARE
     m_score_team_b INT;
     r_username TEXT;
 BEGIN
+    IF auth.uid() IS NULL OR rejecter_uuid IS DISTINCT FROM auth.uid() THEN
+        RAISE EXCEPTION 'Invalid rejecter identity.';
+    END IF;
+
     SELECT score_reporter_id, score_team_a, score_team_b INTO m_score_reporter_id, m_score_team_a, m_score_team_b
     FROM public.matches WHERE id = match_uuid AND score_status = 'pending';
 
@@ -373,3 +407,11 @@ BEGIN
     );
 END;
 $$;
+
+-- Les RPC restent accessibles aux utilisateurs connectÃ©s, jamais au rÃ´le public.
+REVOKE ALL ON FUNCTION public.report_match_score(BIGINT, UUID, INT, INT, UUID[], UUID[]) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.validate_match_score(BIGINT, UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.reject_match_score(BIGINT, UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.report_match_score(BIGINT, UUID, INT, INT, UUID[], UUID[]) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.validate_match_score(BIGINT, UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.reject_match_score(BIGINT, UUID) TO authenticated;

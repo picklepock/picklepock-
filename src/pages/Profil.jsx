@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { LogOut, Settings, UserCircle, Edit3, X, Check, Camera, ShieldAlert, HelpCircle, ArrowLeft, Send, MapPin, Phone, Clock, Image as ImageIcon, Trash2, ShieldCheck, MessageSquare, Calendar, Users, Award, AlertTriangle, ChevronRight, Trophy } from 'lucide-react';
 import Login from './Login';
+import MyMatchesAgenda from '../components/MyMatchesAgenda';
 
 const Profil = ({ session }) => {
     const navigate = useNavigate();
@@ -1018,6 +1019,9 @@ const Profil = ({ session }) => {
             if (file.size > 3 * 1024 * 1024) {
                 throw new Error('L\'image est trop lourde. Elle doit faire moins de 3 Mo.');
             }
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                throw new Error('Seules les images JPEG, PNG et WebP sont acceptées.');
+            }
 
             // SUPPRESSION DE L'ANCIENNE IMAGE (Optionnel mais recommandé pour nettoyer Storage)
             if (editForm.avatar_url && editForm.avatar_url.includes('avatars/')) {
@@ -1028,8 +1032,12 @@ const Profil = ({ session }) => {
                 }
             }
 
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Math.random()}.${fileExt}`;
+            const extensionByMimeType = {
+                'image/jpeg': 'jpg',
+                'image/png': 'png',
+                'image/webp': 'webp',
+            };
+            const fileName = `${crypto.randomUUID()}.${extensionByMimeType[file.type]}`;
             const filePath = `${session.user.id}/${fileName}`;
 
             // Upload de l'image
@@ -1516,92 +1524,11 @@ const Profil = ({ session }) => {
                             </div>
                         </div>
 
-                        {/* MES MATCHS CIRCUIT */}
-                        <div className="bg-white p-8 rounded-[3rem] border border-sport-sand shadow-sm space-y-6">
-                            <div className="flex justify-between items-center">
-                                <h3 className="text-lg font-black uppercase tracking-tight text-sport-navy flex items-center space-x-2">
-                                    <Trophy size={20} className="text-sport-green animate-pulse" />
-                                    <span>{isOwnProfile ? "Mes Matchs Circuit" : "Matchs Circuit"}</span>
-                                </h3>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-sport-beige px-3 py-1 rounded-lg">
-                                    Bêta 2026
-                                </span>
-                            </div>
-
-                            {/* Navigation des Onglets */}
-                            <div className="flex bg-sport-sand/35 p-1 rounded-2xl border border-sport-sand overflow-x-auto scrollbar-hide">
-                                {[
-                                    { id: 'venir', label: 'À venir', count: upcomingMatches.length },
-                                    { id: 'saisir', label: 'À saisir', count: toReportMatches.length },
-                                    { id: 'valider', label: 'À valider', count: toValidateMatches.length },
-                                    { id: 'passes', label: 'Passés', count: pastMatches.length }
-                                ].map(tab => (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => setActiveMatchTab(tab.id)}
-                                        className={`flex-1 min-w-[75px] py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all relative ${
-                                            activeMatchTab === tab.id 
-                                                ? 'bg-sport-navy text-white shadow-md' 
-                                                : 'text-slate-400 hover:text-sport-navy'
-                                        }`}
-                                    >
-                                        <span className="block truncate">{tab.label}</span>
-                                        {tab.count > 0 && (
-                                            <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full text-[8px] font-black flex items-center justify-center border shadow-sm ${
-                                                activeMatchTab === tab.id 
-                                                    ? 'bg-sport-green text-white border-sport-navy' 
-                                                    : 'bg-sport-navy text-white border-white'
-                                            }`}>
-                                                {tab.count}
-                                            </span>
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-
-                            {/* Liste des Matchs */}
-                            <div className="space-y-4">
-                                {fetchingMatches ? (
-                                    <div className="flex justify-center py-8">
-                                        <div className="w-5 h-5 border-2 border-sport-green border-t-transparent rounded-full animate-spin"></div>
-                                    </div>
-                                ) : (
-                                    <>
-                                        {activeMatchTab === 'venir' && (
-                                            upcomingMatches.length > 0 ? (
-                                                upcomingMatches.map(m => renderMatchCard(m, 'venir'))
-                                            ) : (
-                                                renderEmptyState("Aucun match à venir.", "Inscrivez-vous à des matchs sur la page Matches pour commencer à grimper au classement !")
-                                            )
-                                        )}
-
-                                        {activeMatchTab === 'saisir' && (
-                                            toReportMatches.length > 0 ? (
-                                                toReportMatches.map(m => renderMatchCard(m, 'saisir'))
-                                            ) : (
-                                                renderEmptyState("Aucun score à saisir.", "Vos matchs passés n'attendent aucune saisie de score.")
-                                            )
-                                        )}
-
-                                        {activeMatchTab === 'valider' && (
-                                            toValidateMatches.length > 0 ? (
-                                                toValidateMatches.map(m => renderMatchCard(m, 'valider'))
-                                            ) : (
-                                                renderEmptyState("Aucun score à valider.", "Aucun match n'est en attente de validation.")
-                                            )
-                                        )}
-
-                                        {activeMatchTab === 'passes' && (
-                                            pastMatches.length > 0 ? (
-                                                pastMatches.map(m => renderMatchCard(m, 'passes'))
-                                            ) : (
-                                                renderEmptyState("Aucun match passé.", "Terminez et validez des matchs pour voir l'historique de vos victoires.")
-                                            )
-                                        )}
-                                    </>
-                                )}
-                            </div>
-                        </div>
+                        {/* AGENDA MES MATCHS & GAMIFICATION */}
+                        <MyMatchesAgenda 
+                            session={session} 
+                            onOpenChat={(m) => setSelectedMatchChat(m)} 
+                        />
 
                         {/* PUBLICATIONS / FIL D'ACTUALITÉ */}
                         <div className="bg-white p-8 rounded-[3rem] border border-sport-sand shadow-sm space-y-6">

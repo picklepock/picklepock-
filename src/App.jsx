@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, NavLink, Navigate, useNavigate } from 'react-router-dom';
-import { CircleUser, LayoutDashboard, Zap, Crown, Compass, Bell, BellOff, X, Check, Users, Trophy, MessageSquare, AlertTriangle, Settings } from 'lucide-react';
+import { CircleUser, LayoutDashboard, Zap, Crown, Compass, Bell, BellOff, X, Check, Users, Trophy, MessageSquare, AlertTriangle, Settings, Calendar } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import Profil from './pages/Profil';
 import Accueil from './pages/Accueil';
 import Matches from './pages/Matches';
+import Agenda from './pages/Agenda';
 import Ranking from './pages/Ranking';
 import Clubs from './pages/Clubs';
 import Login from './pages/Login';
@@ -12,6 +13,8 @@ import UpdatePassword from './pages/UpdatePassword';
 import Help from './pages/Help';
 import ClubDetail from './pages/ClubDetail';
 import SettingsModal from './components/SettingsModal';
+
+import Actualites from './pages/Actualites';
 
 function App() {
     const navigate = useNavigate();
@@ -222,6 +225,7 @@ function App() {
                         <Route path="/update-password" element={<UpdatePassword />} />
                         <Route path="/help" element={<Help session={session} />} />
                         <Route path="/clubs/:id" element={<ClubDetail session={session} />} />
+                        <Route path="/actualites" element={<Actualites />} />
                         <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                 </main>

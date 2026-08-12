@@ -112,6 +112,10 @@ const Clubs = ({ session }) => {
                 alert(`Le fichier ${file.name} dépasse 3 Mo.`);
                 return;
             }
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                alert(`Le fichier ${file.name} doit être une image JPEG, PNG ou WebP.`);
+                return;
+            }
             validFiles.push(file);
             newPreviews.push(URL.createObjectURL(file));
         });
@@ -139,8 +143,12 @@ const Clubs = ({ session }) => {
 
             // 1. Upload des photos
             for (const file of selectedFiles) {
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${Math.random()}.${fileExt}`;
+                const extensionByMimeType = {
+                    'image/jpeg': 'jpg',
+                    'image/png': 'png',
+                    'image/webp': 'webp',
+                };
+                const fileName = `${crypto.randomUUID()}.${extensionByMimeType[file.type]}`;
                 const filePath = `requests/${session.user.id}/${fileName}`;
 
                 const { error: uploadError } = await supabase.storage

@@ -512,8 +512,9 @@ const ClubDetail = ({ session }) => {
                     start_time: slotStart.toISOString(),
                     end_time: slotEnd.toISOString(),
                     total_price: finalPrice,
-                    payment_status: 'paid', // Simulate paid
-                    status: 'confirmed',
+                    // Seul le serveur ou le gérant doit pouvoir confirmer un paiement.
+                    payment_status: 'pending',
+                    status: 'pending',
                     players_count: playersCount,
                     rented_rackets_count: rentRacketsCount,
                     rented_balls_count: buyBallsCount,
@@ -633,10 +634,11 @@ const ClubDetail = ({ session }) => {
 
     if (!club) return null;
 
-    // Check manager role: match manager_id, or role manager in members, or session user exists
-    const isManager = (session?.user?.id && club?.manager_id && session.user.id === club.manager_id) ||
-                      members.some(m => m.user_id === session?.user?.id && m.role === 'manager') ||
-                      true; // Always true for full access and testing
+    // Cette condition ne sert qu'à l'interface : les politiques RLS Supabase
+    // restent la source d'autorité. Ne jamais contourner ce contrôle en production.
+    const isManager = Boolean(
+        session?.user?.id && club?.manager_id && session.user.id === club.manager_id
+    );
 
     return (
         <div className="pb-32 min-h-screen">

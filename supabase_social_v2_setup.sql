@@ -40,7 +40,9 @@ BEGIN
 
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
+
+REVOKE ALL ON FUNCTION public.notify_followers_on_post() FROM PUBLIC;
 
 DROP TRIGGER IF EXISTS post_created_trigger ON public.player_posts;
 CREATE TRIGGER post_created_trigger

@@ -63,6 +63,15 @@ const ImageUploader = ({ onUploadSuccess, bucketName = 'club_images', folderPath
         const file = e.target.files?.[0];
         if (!file) return;
 
+        if (file.size > 3 * 1024 * 1024) {
+            setError('L’image ne doit pas dépasser 3 Mo.');
+            return;
+        }
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+            setError('Seules les images JPEG, PNG et WebP sont acceptées.');
+            return;
+        }
+
         setError(null);
         setUploading(true);
 
